@@ -883,14 +883,16 @@
     position: absolute;
     left: 0;
     top: 0;
-    font-size: 24px;
-    line-height: 1;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
     user-select: none;
     opacity: 0;
     animation: cloverFloat 2s ease-out forwards;
     will-change: transform, opacity;
+    display: block;
   }
+  .clover svg { width: 100%; height: 100%; display: block; }
   @keyframes cloverFloat {
     0% {
       opacity: 0;
@@ -2619,13 +2621,24 @@ function showToast(message) {
   _toastHideTimer = setTimeout(() => t.classList.remove('show'), 1300);
 }
 
+const CLOVER_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+  '<g fill="#5a7048">' +
+    '<path d="M12 11 Q11 17 13 22" stroke="#5a7048" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
+    '<g transform="translate(12 9)">' +
+      '<path transform="rotate(0)" d="M0,0 C-0.8,-1.6 -4,-1.6 -4,-4.6 C-4,-7.2 -1.5,-8.6 0,-7 C1.5,-8.6 4,-7.2 4,-4.6 C4,-1.6 0.8,-1.6 0,0 Z"/>' +
+      '<path transform="rotate(120)" d="M0,0 C-0.8,-1.6 -4,-1.6 -4,-4.6 C-4,-7.2 -1.5,-8.6 0,-7 C1.5,-8.6 4,-7.2 4,-4.6 C4,-1.6 0.8,-1.6 0,0 Z"/>' +
+      '<path transform="rotate(240)" d="M0,0 C-0.8,-1.6 -4,-1.6 -4,-4.6 C-4,-7.2 -1.5,-8.6 0,-7 C1.5,-8.6 4,-7.2 4,-4.6 C4,-1.6 0.8,-1.6 0,0 Z"/>' +
+    '</g>' +
+  '</g>' +
+'</svg>';
+
 function spawnClovers(count = 4) {
   const layer = document.createElement('div');
   layer.className = 'clover-layer';
   for (let i = 0; i < count; i++) {
     const c = document.createElement('div');
     c.className = 'clover';
-    c.textContent = '☘';
+    c.innerHTML = CLOVER_SVG;
     const startX = (Math.random() - 0.5) * 80;             // -40 〜 +40
     const endX   = startX + (Math.random() - 0.5) * 70;    // ふわっと横に揺れる
     const rot    = (Math.random() - 0.5) * 50;             // -25 〜 +25 度
