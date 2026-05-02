@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ヒトリゴト">
+<meta name="theme-color" content="#d8a48f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>ヒトリゴト</title>
+<style>
+  /* ============ デザイントークン（②Aクリーム明るめ） ============ */
+  :root {
+    --bg: #faf6ee;
+    --card: #ffffff;
+    --ink: #2c2a26;
+    --ink-soft: #6b6862;
+    --ink-mute: #9c988f;
+    --line: #ece8e0;
+    --line-strong: #d8d2c5;
+    --accent: #b8745c;          /* テラコッタ：メインアクセント */
+    --accent-deep: #a35840;     /* 濃いめテラコッタ */
+    --accent-soft: #f5e3d2;
+    --bowel: #5a7048;           /* 排便：穏やかなグリーン */
+    --bowel-soft: #e0e8d6;
+    --period: #b56868;          /* 生理：柔らかな朱 */
+    --period-soft: #f5dcd6;
+    --task: #6b87a8;            /* タスク：落ち着いた青 */
+    --task-soft: #e3eaf2;
+    --memo: #8b6f9c;            /* メモ：やわらかい紫 */
+    --memo-soft: #ece4f0;
+    --warn: #d4a55a;
+    --danger: #c47878;
+    --shadow: 0 1px 3px rgba(60, 50, 30, 0.06), 0 4px 12px rgba(60, 50, 30, 0.04);
+    --radius: 14px;
+    --radius-lg: 20px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 14px 80px;
+  }
+
+  /* ============ スプラッシュ ============ */
+  .splash {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease-out;
+  }
+  .splash.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .splash-icon {
+    width: 96px;
+    height: 96px;
+    background: #d8a48f;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 24px rgba(184, 116, 92, 0.25);
+  }
+  .splash-icon svg { width: 80%; height: 80%; }
+  .splash-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent-deep);
+    margin: 0;
+  }
+  .splash-sub {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ============ ヘッダー ============ */
+  .header { margin-bottom: 18px; }
+  .date-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .date-main {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .date-sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .app-mark {
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+  .backup-banner {
+    display: none;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    background: #fdf5e6;
+    color: #8a6a2c;
+    border: 1px solid #f0d9a8;
+  }
+  .backup-banner.warn { background: #fdf5e6; color: #8a6a2c; border-color: #f0d9a8; }
+  .backup-banner.danger { background: #fbe9e9; color: #9a4040; border-color: #ecc4c4; }
+  .backup-banner.show { display: block; }
+
+  /* ============ セクション ============ */
+  .section {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+  .section-icon { font-size: 16px; }
+
+  /* ============ タスクリスト ============ */
+  .task-list { list-style: none; padding: 0; margin: 0; }
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--line);
+    transition: opacity 0.2s;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item.done { opacity: 0.5; }
+  .task-item.done .task-title { text-decoration: line-through; }
+
+  .checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--line-strong);
+    border-radius: 7px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+  }
+  .checkbox.checked {
+    background: var(--task);
+    border-color: var(--task);
+  }
+  .checkbox.checked::after {
+    content: "";
+    width: 6px;
+    height: 11px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+
+  .task-content { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 15px;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .task-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+  .task-time { color: var(--task); font-weight: 500; }
+  .task-tag {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
+  .task-delete {
+    background: none;
+    border: none;
+    color: var(--ink-mute);
+    font-size: 18px;
+    padding: 4px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .empty-msg {
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  /* ============ ボタン ============ */
+  .btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 13px 16px;
+    transition: transform 0.1s, opacity 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-add {
+    width: 100%;
+    background: var(--task-soft);
+    color: var(--task);
+    margin-top: 8px;
+  }
+  .btn-record {
+    flex: 1;
+    padding: 16px 8px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .btn-bowel { background: var(--bowel-soft); color: var(--bowel); }
+  .btn-period { background: var(--period-soft); color: var(--period); }
+
+  .record-buttons { display: flex; gap: 10px; }
+
+  /* ============ ヒトリゴト（メモ） ============ */
+  .memo-tags {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .memo-tag {
+    flex-shrink: 0;
+    border: 1.5px solid var(--line-strong);
+    background: var(--card);
+    border-radius: 18px;
+    padding: 7px 12px 7px 11px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .memo-tag.active {
+    background: var(--memo);
+    color: white;
+    border-color: var(--memo);
+  }
+  .memo-tag-emoji { font-size: 14px; }
+  .memo-input {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink);
+    -webkit-appearance: none;
+    resize: vertical;
+    min-height: 56px;
+    line-height: 1.5;
+  }
+  .memo-input:focus { outline: none; border-color: var(--memo); }
+  .memo-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-memo-save {
+    flex: 1;
+    background: var(--memo);
+    color: white;
+    padding: 11px;
+    font-size: 14px;
+  }
+  .btn-memo-clear {
+    background: var(--bg);
+    color: var(--ink-soft);
+    padding: 11px 16px;
+    font-size: 14px;
+  }
+  .memo-list {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 0;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  .memo-list-title {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .memo-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .memo-item:last-child { border-bottom: none; }
+  .memo-item-emoji {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .memo-item-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .memo-item-text {
+    font-size: 14px;
+    color: var(--ink);
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .memo-item-time {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 2px;
+  }
+  .memo-item-del {
+    background: none;
+    border: none;
+    color: var(--ink-mute);
+    font-size: 16px;
+    padding: 0 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  /* ============ カレンダー ============ */
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .cal-nav {
+    background: var(--accent-soft);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--accent);
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .cal-month { font-size: 16px; font-weight: 600; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .cal-dow {
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-mute);
+    padding: 6px 0;
+    font-weight: 500;
+  }
+  .cal-dow.sun { color: var(--period); }
+  .cal-dow.sat { color: var(--task); }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .cal-day:active { background: var(--accent-soft); }
+  .cal-day.empty { visibility: hidden; }
+  .cal-day.today {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+  }
+  .cal-day.period { background: var(--period-soft); }
+  .cal-day.period.today { background: var(--accent); }
+  .cal-day.predicted {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--period-soft),
+      var(--period-soft) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+  .day-num { line-height: 1; }
+  .day-dots {
+    display: flex;
+    gap: 2px;
+    margin-top: 2px;
+    height: 4px;
+  }
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+  }
+  .dot-bowel { background: var(--bowel); }
+  .dot-task { background: var(--task); }
+  .dot-memo { background: var(--memo); }
+
+  /* ============ サマリー ============ */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .summary-card {
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .summary-label {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+  }
+  .summary-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .summary-value.period { color: var(--period); }
+  .summary-value.bowel { color: var(--bowel); }
+  .summary-value.memo { color: var(--memo); }
+  .summary-sub {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 2px;
+  }
+
+  /* ============ 設定 ============ */
+  .settings-list { display: flex; flex-direction: column; gap: 6px; }
+  .settings-btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    padding: 12px 14px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .settings-btn .arrow { color: var(--ink-mute); }
+
+  /* ============ モーダル ============ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 14, 0.4);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--card);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px 20px 0 0;
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    text-align: center;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .btn-cancel {
+    flex: 1;
+    background: var(--bg);
+    color: var(--ink-soft);
+  }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+  }
+  .btn-save.bowel { background: var(--bowel); }
+  .btn-save.period { background: var(--period); }
+  .btn-save.memo { background: var(--memo); }
+  .btn-delete {
+    background: transparent;
+    color: var(--danger);
+    margin-top: 8px;
+    width: 100%;
+    border: 1px solid var(--line);
+  }
+
+  /* ============ フォーム要素 ============ */
+  .form-row { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 16px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink);
+    -webkit-appearance: none;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-textarea {
+    min-height: 60px;
+    resize: vertical;
+  }
+
+  .choice-group { display: flex; gap: 6px; }
+  .choice-btn {
+    flex: 1;
+    padding: 11px 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: inherit;
+  }
+  .choice-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .choice-btn.active.bowel { background: var(--bowel); border-color: var(--bowel); }
+  .choice-btn.active.period { background: var(--period); border-color: var(--period); }
+
+  .day-picker { display: flex; gap: 4px; justify-content: space-between; }
+  .day-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: inherit;
+    padding: 0;
+  }
+  .day-btn.active {
+    background: var(--task);
+    color: white;
+    border-color: var(--task);
+  }
+
+  .recurring-list { margin-bottom: 14px; }
+  .recurring-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .recurring-info { font-size: 14px; }
+  .recurring-meta { font-size: 11px; color: var(--ink-mute); margin-top: 2px; }
+  .recurring-del {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .day-detail-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px;
+  }
+  .day-detail-item {
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  .day-detail-item .label {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+
+  /* ============ メモ振り返り画面 ============ */
+  .memo-history {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .memo-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .memo-filter button {
+    flex-shrink: 0;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    color: var(--ink-soft);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .memo-filter button.active {
+    background: var(--memo);
+    color: white;
+    border-color: var(--memo);
+  }
+  .memo-history-day {
+    margin-bottom: 14px;
+  }
+  .memo-history-date {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+
+  @media (max-width: 360px) {
+    .container { padding: 12px 10px 80px; }
+    .date-main { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ スプラッシュ画面 ============ -->
+<div class="splash" id="splash">
+  <div class="splash-icon">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 28 26 C 28 26, 22 36, 22 41 A 5 5 0 0 0 34 41 C 34 36, 28 26, 28 26 Z" fill="#f8f3ea"/>
+      <circle cx="60" cy="62" r="6" fill="none" stroke="#f8f3ea" stroke-width="1.5"/>
+      <circle cx="60" cy="62" r="14" fill="none" stroke="#f8f3ea" stroke-width="1.3" opacity="0.75"/>
+      <circle cx="60" cy="62" r="24" fill="none" stroke="#f8f3ea" stroke-width="1.1" opacity="0.5"/>
+      <circle cx="60" cy="62" r="34" fill="none" stroke="#f8f3ea" stroke-width="0.9" opacity="0.25"/>
+    </svg>
+  </div>
+  <h1 class="splash-title">ワタシノヒトリゴト</h1>
+  <p class="splash-sub">ヒトノワスタジオ</p>
+</div>
+
+<div class="container">
+
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="date-row">
+      <div>
+        <div class="date-main" id="dateMain">—</div>
+        <div class="date-sub" id="dateSub">—</div>
+      </div>
+      <div class="app-mark">ヒトリゴト</div>
+    </div>
+    <div class="backup-banner" id="backupBanner"></div>
+  </header>
+
+  <!-- 今日のタスク -->
+  <section class="section">
+    <h2 class="section-title">
+      <span class="section-icon">✓</span>
+      今日のタスク
+    </h2>
+    <ul class="task-list" id="taskList"></ul>
+    <button class="btn btn-add" onclick="openTaskModal()">＋ タスクを追加</button>
+  </section>
+
+  <!-- 体調記録 -->
+  <section class="section">
+    <h2 class="section-title">
+      <span class="section-icon">♡</span>
+      体調記録
+    </h2>
+    <div class="record-buttons">
+      <button class="btn btn-record btn-bowel" onclick="openBowelModal()">排便を記録</button>
+      <button class="btn btn-record btn-period" onclick="openPeriodModal()">生理を記録</button>
+    </div>
+    <div id="todayStatus" style="margin-top:12px; font-size:13px; color:var(--ink-soft);"></div>
+  </section>
+
+  <!-- 今日のヒトリゴト -->
+  <section class="section">
+    <h2 class="section-title">
+      <span class="section-icon">💭</span>
+      今日のヒトリゴト
+    </h2>
+    <div class="memo-tags" id="memoTags">
+      <button class="memo-tag active" data-tag="つぶやき" onclick="selectMemoTag('つぶやき')">
+        <span class="memo-tag-emoji">💭</span>つぶやき
+      </button>
+      <button class="memo-tag" data-tag="ひらめき" onclick="selectMemoTag('ひらめき')">
+        <span class="memo-tag-emoji">💡</span>ひらめき
+      </button>
+      <button class="memo-tag" data-tag="きょう" onclick="selectMemoTag('きょう')">
+        <span class="memo-tag-emoji">📖</span>きょう
+      </button>
+      <button class="memo-tag" data-tag="ありがとう" onclick="selectMemoTag('ありがとう')">
+        <span class="memo-tag-emoji">☘️</span>ありがとう
+      </button>
+    </div>
+    <textarea class="memo-input" id="memoInput" placeholder="ふと思ったこと、ひらめいたこと、なんでも..."></textarea>
+    <div class="memo-actions">
+      <button class="btn btn-memo-clear" onclick="clearMemoInput()">消す</button>
+      <button class="btn btn-memo-save" onclick="saveMemo()">保存</button>
+    </div>
+    <div id="todayMemoList"></div>
+  </section>
+
+  <!-- カレンダー -->
+  <section class="section">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="calMonth">—</div>
+      <button class="cal-nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:11px; color:var(--ink-mute); flex-wrap:wrap;">
+      <span><span class="dot dot-bowel" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>排便</span>
+      <span><span style="display:inline-block; width:10px; height:10px; background:var(--period-soft); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>生理</span>
+      <span><span style="display:inline-block; width:10px; height:10px; background:repeating-linear-gradient(45deg,var(--period-soft),var(--period-soft) 2px,transparent 2px,transparent 4px); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>予測</span>
+      <span><span class="dot dot-task" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>予定</span>
+      <span><span class="dot dot-memo" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>メモ</span>
+    </div>
+  </section>
+
+  <!-- サマリー -->
+  <section class="section">
+    <h2 class="section-title">
+      <span class="section-icon">◇</span>
+      サマリー
+    </h2>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">次回生理予測</div>
+        <div class="summary-value period" id="nextPeriod">—</div>
+        <div class="summary-sub" id="nextPeriodSub"></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">今月の排便</div>
+        <div class="summary-value bowel" id="bowelCount">—</div>
+        <div class="summary-sub" id="bowelSub"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 設定 -->
+  <section class="section">
+    <h2 class="section-title">
+      <span class="section-icon">⚙</span>
+      設定・バックアップ
+    </h2>
+    <div class="settings-list">
+      <button class="settings-btn" onclick="openMemoHistoryModal()">
+        <span>📔 ヒトリゴトを振り返る</span><span class="arrow">›</span>
+      </button>
+      <button class="settings-btn" onclick="openRecurringModal()">
+        <span>🔁 繰り返しタスクの管理</span><span class="arrow">›</span>
+      </button>
+      <button class="settings-btn" onclick="exportData()">
+        <span>📥 バックアップを保存</span><span class="arrow">›</span>
+      </button>
+      <button class="settings-btn" onclick="document.getElementById('importFile').click()">
+        <span>📤 バックアップを読み込む</span><span class="arrow">›</span>
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="settings-btn" onclick="openHelp()">
+        <span>❓ 使い方</span><span class="arrow">›</span>
+      </button>
+    </div>
+  </section>
+
+  <p style="text-align:center; font-size:10px; color:var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.05em;">
+    ヒトノワスタジオ
+  </p>
+
+</div>
+
+<!-- ========== モーダル：タスク追加/編集 ========== -->
+<div class="modal-backdrop" id="taskModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title" id="taskModalTitle">タスクを追加</h3>
+    <div class="form-row">
+      <label class="form-label">内容</label>
+      <input type="text" class="form-input" id="taskTitle" placeholder="例：通院、買い物">
+    </div>
+    <div class="form-row">
+      <label class="form-label">日付</label>
+      <input type="date" class="form-input" id="taskDate">
+    </div>
+    <div class="form-row">
+      <label class="form-label">時間（任意）</label>
+      <input type="time" class="form-input" id="taskTime">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('taskModal')">キャンセル</button>
+      <button class="btn btn-save" onclick="saveTask()">保存</button>
+    </div>
+    <button class="btn btn-delete" id="taskDeleteBtn" style="display:none;" onclick="deleteEditingTask()">このタスクを削除</button>
+  </div>
+</div>
+
+<!-- ========== モーダル：排便記録 ========== -->
+<div class="modal-backdrop" id="bowelModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">排便の記録</h3>
+    <div class="form-row">
+      <label class="form-label">日付</label>
+      <input type="date" class="form-input" id="bowelDate">
+    </div>
+    <div class="form-row">
+      <label class="form-label">排便はありましたか？</label>
+      <div class="choice-group">
+        <button class="choice-btn bowel" data-bowel-passed="true" onclick="selectChoice(this, 'bowel-passed')">出た</button>
+        <button class="choice-btn bowel" data-bowel-passed="false" onclick="selectChoice(this, 'bowel-passed')">出なかった</button>
+      </div>
+    </div>
+    <div class="form-row" id="bowelBleedingRow">
+      <label class="form-label">出血</label>
+      <div class="choice-group">
+        <button class="choice-btn bowel" data-bowel-bleeding="false" onclick="selectChoice(this, 'bowel-bleeding')">なし</button>
+        <button class="choice-btn bowel" data-bowel-bleeding="true" onclick="selectChoice(this, 'bowel-bleeding')">あり</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="bowelMemo" placeholder="気になることがあれば"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('bowelModal')">キャンセル</button>
+      <button class="btn btn-save bowel" onclick="saveBowel()">保存</button>
+    </div>
+    <button class="btn btn-delete" id="bowelDeleteBtn" style="display:none;" onclick="deleteBowel()">この記録を削除</button>
+  </div>
+</div>
+
+<!-- ========== モーダル：生理記録 ========== -->
+<div class="modal-backdrop" id="periodModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">生理の記録</h3>
+    <div class="form-row">
+      <label class="form-label">開始日</label>
+      <input type="date" class="form-input" id="periodStart">
+    </div>
+    <div class="form-row">
+      <label class="form-label">終了日（まだなら空欄でOK）</label>
+      <input type="date" class="form-input" id="periodEnd">
+    </div>
+    <div class="form-row">
+      <label class="form-label">量</label>
+      <div class="choice-group">
+        <button class="choice-btn period" data-period-flow="少ない" onclick="selectChoice(this, 'period-flow')">少ない</button>
+        <button class="choice-btn period" data-period-flow="普通" onclick="selectChoice(this, 'period-flow')">普通</button>
+        <button class="choice-btn period" data-period-flow="多い" onclick="selectChoice(this, 'period-flow')">多い</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="periodMemo" placeholder="痛み・体調・気分など"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('periodModal')">キャンセル</button>
+      <button class="btn btn-save period" onclick="savePeriod()">保存</button>
+    </div>
+    <button class="btn btn-delete" id="periodDeleteBtn" style="display:none;" onclick="deletePeriod()">この記録を削除</button>
+  </div>
+</div>
+
+<!-- ========== モーダル：繰り返しタスク管理 ========== -->
+<div class="modal-backdrop" id="recurringModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">繰り返しタスク</h3>
+    <div class="recurring-list" id="recurringList"></div>
+    <div style="border-top:1px solid var(--line); padding-top:14px;">
+      <div class="form-row">
+        <label class="form-label">新しい繰り返しタスク</label>
+        <input type="text" class="form-input" id="recurringTitle" placeholder="例：朝の薬">
+      </div>
+      <div class="form-row">
+        <label class="form-label">時間（任意）</label>
+        <input type="time" class="form-input" id="recurringTime">
+      </div>
+      <div class="form-row">
+        <label class="form-label">繰り返す曜日</label>
+        <div class="day-picker" id="recurringDays">
+          <button class="day-btn" data-day="0">日</button>
+          <button class="day-btn" data-day="1">月</button>
+          <button class="day-btn" data-day="2">火</button>
+          <button class="day-btn" data-day="3">水</button>
+          <button class="day-btn" data-day="4">木</button>
+          <button class="day-btn" data-day="5">金</button>
+          <button class="day-btn" data-day="6">土</button>
+        </div>
+      </div>
+      <button class="btn btn-save" style="width:100%;" onclick="addRecurring()">追加する</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('recurringModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== モーダル：日付詳細 ========== -->
+<div class="modal-backdrop" id="dayModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title" id="dayModalTitle">—</h3>
+    <ul class="day-detail-list" id="dayDetailList"></ul>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('dayModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== モーダル：メモ振り返り ========== -->
+<div class="modal-backdrop" id="memoHistoryModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">📔 ヒトリゴトを振り返る</h3>
+    <div class="memo-filter" id="memoFilter">
+      <button class="active" data-filter="all" onclick="filterMemo('all')">すべて</button>
+      <button data-filter="つぶやき" onclick="filterMemo('つぶやき')">💭 つぶやき</button>
+      <button data-filter="ひらめき" onclick="filterMemo('ひらめき')">💡 ひらめき</button>
+      <button data-filter="きょう" onclick="filterMemo('きょう')">📖 きょう</button>
+      <button data-filter="ありがとう" onclick="filterMemo('ありがとう')">☘️ ありがとう</button>
+    </div>
+    <div class="memo-history" id="memoHistory"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('memoHistoryModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== モーダル：メモ編集 ========== -->
+<div class="modal-backdrop" id="memoEditModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">ヒトリゴトを編集</h3>
+    <div class="form-row">
+      <label class="form-label">タグ</label>
+      <div class="memo-tags" id="memoEditTags">
+        <button class="memo-tag" data-tag="つぶやき" onclick="selectMemoEditTag('つぶやき')">
+          <span class="memo-tag-emoji">💭</span>つぶやき
+        </button>
+        <button class="memo-tag" data-tag="ひらめき" onclick="selectMemoEditTag('ひらめき')">
+          <span class="memo-tag-emoji">💡</span>ひらめき
+        </button>
+        <button class="memo-tag" data-tag="きょう" onclick="selectMemoEditTag('きょう')">
+          <span class="memo-tag-emoji">📖</span>きょう
+        </button>
+        <button class="memo-tag" data-tag="ありがとう" onclick="selectMemoEditTag('ありがとう')">
+          <span class="memo-tag-emoji">☘️</span>ありがとう
+        </button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">内容</label>
+      <textarea class="form-textarea" id="memoEditText" style="min-height: 100px;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('memoEditModal')">キャンセル</button>
+      <button class="btn btn-save memo" onclick="saveMemoEdit()">保存</button>
+    </div>
+    <button class="btn btn-delete" onclick="deleteEditingMemo()">このヒトリゴトを削除</button>
+  </div>
+</div>
+
+<!-- ========== モーダル：使い方 ========== -->
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">使い方</h3>
+    <div style="font-size:14px; line-height:1.7; color:var(--ink); padding: 0 4px;">
+      <p><strong>📝 毎日の流れ</strong><br>
+      朝起きたら開いて、今日のタスクを確認。終わったらチェック。体調記録は「排便を記録」「生理を記録」ボタンから。</p>
+      <p><strong>💭 今日のヒトリゴト</strong><br>
+      ふと思ったこと、ひらめいたこと、なんでも。書かなくてもいいし、1日に何回書いてもOK。タグを選んで保存するだけ。</p>
+      <ul style="padding-left: 20px; margin: 4px 0;">
+        <li>💭 <strong>つぶやき</strong> ── 短いひとこと</li>
+        <li>💡 <strong>ひらめき</strong> ── アイデア・気づき</li>
+        <li>📖 <strong>きょう</strong> ── 日記、今日のこと</li>
+        <li>☘️ <strong>ありがとう</strong> ── 感謝・嬉しかったこと</li>
+      </ul>
+      <p><strong>🔁 繰り返しタスク</strong><br>
+      毎朝の薬など、決まった曜日のタスクは「設定 → 繰り返しタスクの管理」で登録すれば毎日自動で表示されます。</p>
+      <p><strong>📅 カレンダー</strong><br>
+      過去の日付をタップすると、その日の記録や予定、ヒトリゴトが見られます。生理期間は色付き、次回予測は斜線で表示。</p>
+      <p><strong>📔 振り返る</strong><br>
+      「設定 → ヒトリゴトを振り返る」で、過去のメモをタグで絞り込んで見返せます。</p>
+      <p><strong>💾 バックアップ（大事！）</strong><br>
+      データはこの端末の中にだけ保存されます。長く使わないと消えることがあるので、月1回くらい「バックアップを保存」を押してiCloud DriveやGoogle Driveに保存してください。</p>
+      <p><strong>🔔 通知について</strong><br>
+      このアプリ自体は通知を出しません。確実に鳴らしたい予定はスマホの「リマインダー」アプリにも入れておくのがおすすめです。</p>
+      <p><strong>🔒 プライバシー</strong><br>
+      データは外部に送信されません。あなたの端末内だけに保存されます。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('helpModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================
+   スプラッシュ画面
+========================================= */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('hide');
+    setTimeout(() => splash.style.display = 'none', 600);
+  }, 1200);
+});
+
+/* =========================================
+   データ管理
+========================================= */
+const STORAGE_KEY = 'hitorigoto_v1';
+
+const defaultData = {
+  bowelRecords: {},
+  periodRecords: [],
+  tasks: [],
+  recurringTasks: [],
+  recurringDone: {},
+  memos: [],          // [ { id, date, time, tag, text } ]
+  lastBackup: null
+};
+
+let state = loadData();
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(defaultData));
+    const parsed = JSON.parse(raw);
+    return Object.assign(JSON.parse(JSON.stringify(defaultData)), parsed);
+  } catch (e) {
+    console.error('データ読み込み失敗', e);
+    return JSON.parse(JSON.stringify(defaultData));
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    alert('保存に失敗しました。ブラウザのストレージ設定を確認してください。');
+  }
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* =========================================
+   日付ユーティリティ
+========================================= */
+function todayStr() {
+  return ymd(new Date());
+}
+function ymd(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseYmd(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function dayDiff(d1, d2) {
+  const a = parseYmd(d1).getTime();
+  const b = parseYmd(d2).getTime();
+  return Math.round((b - a) / 86400000);
+}
+function formatJP(s) {
+  const d = parseYmd(s);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+function nowTimeStr() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+const DOW_JP = ['日', '月', '火', '水', '木', '金', '土'];
+const TAG_EMOJI = {
+  'つぶやき': '💭',
+  'ひらめき': '💡',
+  'きょう': '📖',
+  'ありがとう': '☘️'
+};
+
+/* =========================================
+   ヘッダー描画
+========================================= */
+function renderHeader() {
+  const d = new Date();
+  document.getElementById('dateMain').textContent =
+    `${d.getMonth() + 1}月${d.getDate()}日`;
+  document.getElementById('dateSub').textContent =
+    `${d.getFullYear()}年（${DOW_JP[d.getDay()]}）`;
+
+  const banner = document.getElementById('backupBanner');
+  if (state.lastBackup) {
+    const days = Math.floor((Date.now() - new Date(state.lastBackup).getTime()) / 86400000);
+    if (days >= 14) {
+      banner.className = 'backup-banner danger show';
+      banner.textContent = `⚠️ 最後のバックアップから${days}日経過しています。設定からバックアップを保存してください。`;
+    } else if (days >= 7) {
+      banner.className = 'backup-banner warn show';
+      banner.textContent = `📥 最後のバックアップから${days}日経過しました。そろそろ保存をおすすめします。`;
+    } else {
+      banner.className = 'backup-banner';
+    }
+  } else {
+    banner.className = 'backup-banner warn show';
+    banner.textContent = '📥 まだバックアップがありません。設定から保存しておきましょう。';
+  }
+}
+
+/* =========================================
+   タスクリスト
+========================================= */
+function getTodayTasks() {
+  const today = todayStr();
+  const dow = new Date().getDay();
+  const items = [];
+
+  state.tasks
+    .filter(t => t.date === today)
+    .forEach(t => items.push({ ...t, type: 'task' }));
+
+  state.recurringTasks
+    .filter(r => r.days.includes(dow))
+    .forEach(r => {
+      const doneKey = `${today}_${r.id}`;
+      items.push({
+        id: r.id,
+        title: r.title,
+        time: r.time,
+        type: 'recurring',
+        done: !!state.recurringDone[doneKey]
+      });
+    });
+
+  items.sort((a, b) => {
+    if (!a.time && !b.time) return 0;
+    if (!a.time) return 1;
+    if (!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+
+  return items;
+}
+
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  const items = getTodayTasks();
+  list.innerHTML = '';
+  if (items.length === 0) {
+    list.innerHTML = '<li class="empty-msg">今日のタスクはありません</li>';
+    return;
+  }
+  items.forEach(t => {
+    const li = document.createElement('li');
+    li.className = 'task-item' + (t.done ? ' done' : '');
+    li.innerHTML = `
+      <div class="checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask('${t.type}', '${t.id}')"></div>
+      <div class="task-content" onclick="${t.type === 'task' ? `editTask('${t.id}')` : `void(0)`}">
+        <div class="task-title"></div>
+        <div class="task-meta">
+          ${t.time ? `<span class="task-time">⏱ ${t.time}</span>` : ''}
+          ${t.type === 'recurring' ? '<span class="task-tag">毎日</span>' : ''}
+        </div>
+      </div>
+      ${t.type === 'task' ? `<button class="task-delete" onclick="deleteTask('${t.id}')">×</button>` : ''}
+    `;
+    li.querySelector('.task-title').textContent = t.title;
+    list.appendChild(li);
+  });
+}
+
+function toggleTask(type, id) {
+  if (type === 'task') {
+    const t = state.tasks.find(x => x.id === id);
+    if (t) t.done = !t.done;
+  } else {
+    const today = todayStr();
+    const key = `${today}_${id}`;
+    state.recurringDone[key] = !state.recurringDone[key];
+  }
+  saveData();
+  renderTasks();
+}
+
+function deleteTask(id) {
+  if (!confirm('このタスクを削除しますか？')) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveData();
+  renderTasks();
+  renderCalendar();
+}
+
+let editingTaskId = null;
+function openTaskModal() {
+  editingTaskId = null;
+  document.getElementById('taskModalTitle').textContent = 'タスクを追加';
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDate').value = todayStr();
+  document.getElementById('taskTime').value = '';
+  document.getElementById('taskDeleteBtn').style.display = 'none';
+  showModal('taskModal');
+}
+function editTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  editingTaskId = id;
+  document.getElementById('taskModalTitle').textContent = 'タスクを編集';
+  document.getElementById('taskTitle').value = t.title;
+  document.getElementById('taskDate').value = t.date;
+  document.getElementById('taskTime').value = t.time || '';
+  document.getElementById('taskDeleteBtn').style.display = 'block';
+  showModal('taskModal');
+}
+function deleteEditingTask() {
+  if (!editingTaskId) return;
+  if (!confirm('このタスクを削除しますか？')) return;
+  state.tasks = state.tasks.filter(t => t.id !== editingTaskId);
+  saveData();
+  closeModal('taskModal');
+  renderAll();
+}
+function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  const date = document.getElementById('taskDate').value;
+  const time = document.getElementById('taskTime').value;
+  if (!title) { alert('内容を入力してください'); return; }
+  if (!date) { alert('日付を選んでください'); return; }
+
+  if (editingTaskId) {
+    const t = state.tasks.find(x => x.id === editingTaskId);
+    if (t) { t.title = title; t.date = date; t.time = time; }
+  } else {
+    state.tasks.push({ id: uid(), title, date, time, done: false });
+  }
+  saveData();
+  closeModal('taskModal');
+  renderAll();
+}
+
+/* =========================================
+   排便記録
+========================================= */
+let bowelChoices = { passed: null, bleeding: null };
+let editingBowelDate = null;
+
+function openBowelModal(date) {
+  const d = date || todayStr();
+  editingBowelDate = d;
+  document.getElementById('bowelDate').value = d;
+  const existing = state.bowelRecords[d];
+  bowelChoices = { passed: null, bleeding: null };
+
+  document.querySelectorAll('#bowelModal .choice-btn').forEach(b => b.classList.remove('active'));
+
+  if (existing) {
+    bowelChoices.passed = existing.passed;
+    bowelChoices.bleeding = existing.bleeding;
+    document.getElementById('bowelMemo').value = existing.memo || '';
+    document.querySelectorAll('#bowelModal [data-bowel-passed]').forEach(b => {
+      if (b.dataset.bowelPassed === String(existing.passed)) b.classList.add('active');
+    });
+    document.querySelectorAll('#bowelModal [data-bowel-bleeding]').forEach(b => {
+      if (b.dataset.bowelBleeding === String(existing.bleeding)) b.classList.add('active');
+    });
+    document.getElementById('bowelDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('bowelMemo').value = '';
+    document.getElementById('bowelDeleteBtn').style.display = 'none';
+  }
+  showModal('bowelModal');
+}
+
+function selectChoice(btn, group) {
+  const parent = btn.closest('.choice-group');
+  parent.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (group === 'bowel-passed') bowelChoices.passed = btn.dataset.bowelPassed === 'true';
+  if (group === 'bowel-bleeding') bowelChoices.bleeding = btn.dataset.bowelBleeding === 'true';
+  if (group === 'period-flow') periodFlow = btn.dataset.periodFlow;
+}
+
+function saveBowel() {
+  const date = document.getElementById('bowelDate').value;
+  if (!date) { alert('日付を選んでください'); return; }
+  if (bowelChoices.passed === null) { alert('排便の有無を選んでください'); return; }
+
+  state.bowelRecords[date] = {
+    passed: bowelChoices.passed,
+    bleeding: bowelChoices.bleeding === true,
+    memo: document.getElementById('bowelMemo').value.trim()
+  };
+  saveData();
+  closeModal('bowelModal');
+  renderAll();
+}
+
+function deleteBowel() {
+  if (!editingBowelDate) return;
+  if (!confirm('この記録を削除しますか？')) return;
+  delete state.bowelRecords[editingBowelDate];
+  saveData();
+  closeModal('bowelModal');
+  renderAll();
+}
+
+/* =========================================
+   生理記録
+========================================= */
+let periodFlow = null;
+let editingPeriodId = null;
+
+function openPeriodModal(date) {
+  editingPeriodId = null;
+  periodFlow = null;
+  document.querySelectorAll('#periodModal .choice-btn').forEach(b => b.classList.remove('active'));
+
+  const checkDate = date || todayStr();
+  const existing = state.periodRecords.find(p => {
+    const endBound = p.end || todayStr();
+    return checkDate >= p.start && checkDate <= endBound;
+  });
+
+  if (existing) {
+    editingPeriodId = existing.id;
+    document.getElementById('periodStart').value = existing.start;
+    document.getElementById('periodEnd').value = existing.end || '';
+    document.getElementById('periodMemo').value = existing.memo || '';
+    periodFlow = existing.flow;
+    document.querySelectorAll('#periodModal [data-period-flow]').forEach(b => {
+      if (b.dataset.periodFlow === existing.flow) b.classList.add('active');
+    });
+    document.getElementById('periodDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('periodStart').value = checkDate;
+    document.getElementById('periodEnd').value = '';
+    document.getElementById('periodMemo').value = '';
+    document.getElementById('periodDeleteBtn').style.display = 'none';
+  }
+  showModal('periodModal');
+}
+
+function savePeriod() {
+  const start = document.getElementById('periodStart').value;
+  const end = document.getElementById('periodEnd').value;
+  const memo = document.getElementById('periodMemo').value.trim();
+  if (!start) { alert('開始日を選んでください'); return; }
+  if (end && end < start) { alert('終了日は開始日より後にしてください'); return; }
+
+  if (editingPeriodId) {
+    const p = state.periodRecords.find(x => x.id === editingPeriodId);
+    if (p) {
+      p.start = start; p.end = end || null; p.flow = periodFlow; p.memo = memo;
+    }
+  } else {
+    state.periodRecords.push({
+      id: uid(), start, end: end || null, flow: periodFlow, memo
+    });
+  }
+  saveData();
+  closeModal('periodModal');
+  renderAll();
+}
+
+function deletePeriod() {
+  if (!editingPeriodId) return;
+  if (!confirm('この記録を削除しますか？')) return;
+  state.periodRecords = state.periodRecords.filter(p => p.id !== editingPeriodId);
+  saveData();
+  closeModal('periodModal');
+  renderAll();
+}
+
+/* =========================================
+   ヒトリゴト（メモ）
+========================================= */
+let selectedMemoTag = 'つぶやき';
+
+function selectMemoTag(tag) {
+  selectedMemoTag = tag;
+  document.querySelectorAll('#memoTags .memo-tag').forEach(b => {
+    b.classList.toggle('active', b.dataset.tag === tag);
+  });
+}
+
+function clearMemoInput() {
+  document.getElementById('memoInput').value = '';
+}
+
+function saveMemo() {
+  const text = document.getElementById('memoInput').value.trim();
+  if (!text) { alert('内容を入力してください'); return; }
+
+  state.memos.push({
+    id: uid(),
+    date: todayStr(),
+    time: nowTimeStr(),
+    tag: selectedMemoTag,
+    text: text
+  });
+  saveData();
+  document.getElementById('memoInput').value = '';
+  renderTodayMemos();
+  renderCalendar();
+}
+
+function renderTodayMemos() {
+  const today = todayStr();
+  const todayMemos = state.memos
+    .filter(m => m.date === today)
+    .sort((a, b) => b.time.localeCompare(a.time));
+
+  const container = document.getElementById('todayMemoList');
+  if (todayMemos.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = `
+    <ul class="memo-list">
+      <div class="memo-list-title">今日のヒトリゴト（${todayMemos.length}件）</div>
+      ${todayMemos.map(m => `
+        <li class="memo-item" onclick="openMemoEdit('${m.id}')">
+          <div class="memo-item-emoji">${TAG_EMOJI[m.tag] || '💭'}</div>
+          <div class="memo-item-content">
+            <div class="memo-item-text"></div>
+            <div class="memo-item-time">${m.time} ・ ${m.tag}</div>
+          </div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+  // textContentで安全に挿入
+  const items = container.querySelectorAll('.memo-item-text');
+  todayMemos.forEach((m, i) => {
+    if (items[i]) items[i].textContent = m.text;
+  });
+}
+
+let editingMemoId = null;
+let editingMemoTag = 'つぶやき';
+
+function openMemoEdit(id) {
+  const m = state.memos.find(x => x.id === id);
+  if (!m) return;
+  editingMemoId = id;
+  editingMemoTag = m.tag;
+  document.getElementById('memoEditText').value = m.text;
+  document.querySelectorAll('#memoEditTags .memo-tag').forEach(b => {
+    b.classList.toggle('active', b.dataset.tag === m.tag);
+  });
+  showModal('memoEditModal');
+}
+
+function selectMemoEditTag(tag) {
+  editingMemoTag = tag;
+  document.querySelectorAll('#memoEditTags .memo-tag').forEach(b => {
+    b.classList.toggle('active', b.dataset.tag === tag);
+  });
+}
+
+function saveMemoEdit() {
+  const text = document.getElementById('memoEditText').value.trim();
+  if (!text) { alert('内容を入力してください'); return; }
+  const m = state.memos.find(x => x.id === editingMemoId);
+  if (m) {
+    m.text = text;
+    m.tag = editingMemoTag;
+  }
+  saveData();
+  closeModal('memoEditModal');
+  renderAll();
+}
+
+function deleteEditingMemo() {
+  if (!editingMemoId) return;
+  if (!confirm('このヒトリゴトを削除しますか？')) return;
+  state.memos = state.memos.filter(m => m.id !== editingMemoId);
+  saveData();
+  closeModal('memoEditModal');
+  renderAll();
+}
+
+/* メモ振り返り画面 */
+let memoFilterTag = 'all';
+
+function openMemoHistoryModal() {
+  memoFilterTag = 'all';
+  document.querySelectorAll('#memoFilter button').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'all');
+  });
+  renderMemoHistory();
+  showModal('memoHistoryModal');
+}
+
+function filterMemo(tag) {
+  memoFilterTag = tag;
+  document.querySelectorAll('#memoFilter button').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === tag);
+  });
+  renderMemoHistory();
+}
+
+function renderMemoHistory() {
+  const container = document.getElementById('memoHistory');
+  let filtered = state.memos;
+  if (memoFilterTag !== 'all') {
+    filtered = filtered.filter(m => m.tag === memoFilterTag);
+  }
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-msg">まだヒトリゴトがありません</div>';
+    return;
+  }
+
+  // 日付で降順、同じ日内は時刻降順
+  filtered.sort((a, b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return b.time.localeCompare(a.time);
+  });
+
+  // 日付ごとにグループ化
+  const groups = {};
+  filtered.forEach(m => {
+    if (!groups[m.date]) groups[m.date] = [];
+    groups[m.date].push(m);
+  });
+
+  container.innerHTML = Object.keys(groups).map(date => {
+    const d = parseYmd(date);
+    const dateLabel = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${DOW_JP[d.getDay()]}）`;
+    return `
+      <div class="memo-history-day">
+        <div class="memo-history-date">${dateLabel}</div>
+        <ul class="memo-list" style="margin-top:0; border-top:none; padding-top:0;">
+          ${groups[date].map(m => `
+            <li class="memo-item" onclick="closeModal('memoHistoryModal'); setTimeout(() => openMemoEdit('${m.id}'), 250)">
+              <div class="memo-item-emoji">${TAG_EMOJI[m.tag] || '💭'}</div>
+              <div class="memo-item-content">
+                <div class="memo-item-text"></div>
+                <div class="memo-item-time">${m.time} ・ ${m.tag}</div>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
+
+  // textContentで安全に挿入
+  const allItems = container.querySelectorAll('.memo-item-text');
+  let idx = 0;
+  Object.keys(groups).forEach(date => {
+    groups[date].forEach(m => {
+      if (allItems[idx]) allItems[idx].textContent = m.text;
+      idx++;
+    });
+  });
+}
+
+/* =========================================
+   今日の体調状況表示
+========================================= */
+function renderTodayStatus() {
+  const today = todayStr();
+  const lines = [];
+
+  const bowel = state.bowelRecords[today];
+  if (bowel) {
+    let s = `今日の排便：${bowel.passed ? '✓ あり' : '— なし'}`;
+    if (bowel.bleeding) s += '（出血あり）';
+    lines.push(s);
+  }
+
+  const inPeriod = state.periodRecords.find(p => {
+    const endBound = p.end || today;
+    return today >= p.start && today <= endBound;
+  });
+  if (inPeriod) {
+    const dayNum = dayDiff(inPeriod.start, today) + 1;
+    lines.push(`生理${dayNum}日目（${inPeriod.flow || '量未記録'}）`);
+  }
+
+  document.getElementById('todayStatus').innerHTML = lines.join('<br>');
+}
+
+/* =========================================
+   カレンダー
+========================================= */
+let calYear, calMonth;
+
+function initCalendar() {
+  const d = new Date();
+  calYear = d.getFullYear();
+  calMonth = d.getMonth();
+}
+
+function changeMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+  renderSummary();
+}
+
+function renderCalendar() {
+  document.getElementById('calMonth').textContent = `${calYear}年${calMonth + 1}月`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  ['日','月','火','水','木','金','土'].forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'cal-dow' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '');
+    div.textContent = d;
+    grid.appendChild(div);
+  });
+
+  const first = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth + 1, 0).getDate();
+  const startDow = first.getDay();
+  const today = todayStr();
+  const predicted = predictNextPeriod();
+
+  for (let i = 0; i < startDow; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day empty';
+    grid.appendChild(cell);
+  }
+
+  for (let day = 1; day <= lastDay; day++) {
+    const dateStr = ymd(new Date(calYear, calMonth, day));
+    const btn = document.createElement('button');
+    btn.className = 'cal-day';
+    btn.onclick = () => openDayDetail(dateStr);
+
+    let cls = '';
+    const inPeriod = state.periodRecords.some(p => {
+      const endBound = p.end || today;
+      return dateStr >= p.start && dateStr <= endBound;
+    });
+    if (inPeriod) cls += ' period';
+    if (predicted && dateStr >= predicted.start && dateStr <= predicted.end) {
+      if (!inPeriod) cls += ' predicted';
+    }
+    if (dateStr === today) cls += ' today';
+    btn.className = 'cal-day' + cls;
+
+    const hasBowel = !!state.bowelRecords[dateStr];
+    const hasTask = state.tasks.some(t => t.date === dateStr);
+    const hasMemo = state.memos.some(m => m.date === dateStr);
+
+    btn.innerHTML = `
+      <span class="day-num">${day}</span>
+      <span class="day-dots">
+        ${hasBowel ? '<span class="dot dot-bowel"></span>' : ''}
+        ${hasTask ? '<span class="dot dot-task"></span>' : ''}
+        ${hasMemo ? '<span class="dot dot-memo"></span>' : ''}
+      </span>
+    `;
+    grid.appendChild(btn);
+  }
+}
+
+/* =========================================
+   生理予測
+========================================= */
+function predictNextPeriod() {
+  if (state.periodRecords.length === 0) return null;
+  const sorted = [...state.periodRecords].sort((a, b) => a.start.localeCompare(b.start));
+  const last = sorted[sorted.length - 1];
+
+  let cycle = 28;
+  if (sorted.length >= 2) {
+    const recent = sorted.slice(-4);
+    const diffs = [];
+    for (let i = 1; i < recent.length; i++) {
+      diffs.push(dayDiff(recent[i - 1].start, recent[i].start));
+    }
+    if (diffs.length > 0) {
+      cycle = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length);
+    }
+  }
+
+  let duration = 5;
+  const completed = sorted.filter(p => p.end);
+  if (completed.length > 0) {
+    const dur = completed.map(p => dayDiff(p.start, p.end) + 1);
+    duration = Math.round(dur.reduce((a, b) => a + b, 0) / dur.length);
+  }
+
+  const lastStart = parseYmd(last.start);
+  const nextStart = new Date(lastStart);
+  nextStart.setDate(nextStart.getDate() + cycle);
+  const nextEnd = new Date(nextStart);
+  nextEnd.setDate(nextEnd.getDate() + duration - 1);
+
+  return {
+    start: ymd(nextStart),
+    end: ymd(nextEnd),
+    cycle,
+    duration
+  };
+}
+
+/* =========================================
+   サマリー
+========================================= */
+function renderSummary() {
+  const today = todayStr();
+
+  const pred = predictNextPeriod();
+  if (pred) {
+    if (pred.start < today) {
+      document.getElementById('nextPeriod').textContent = '記録待ち';
+      document.getElementById('nextPeriodSub').textContent = '予測日を過ぎました';
+    } else {
+      document.getElementById('nextPeriod').textContent = formatJP(pred.start);
+      const days = dayDiff(today, pred.start);
+      document.getElementById('nextPeriodSub').textContent =
+        days === 0 ? '今日の予測' : `あと${days}日（周期${pred.cycle}日）`;
+    }
+  } else {
+    document.getElementById('nextPeriod').textContent = '—';
+    document.getElementById('nextPeriodSub').textContent = '記録が増えると予測されます';
+  }
+
+  const monthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+  const monthBowel = Object.entries(state.bowelRecords)
+    .filter(([k, v]) => k.startsWith(monthPrefix) && v.passed);
+  document.getElementById('bowelCount').textContent = `${monthBowel.length}日`;
+  const lastDay = new Date(calYear, calMonth + 1, 0).getDate();
+  document.getElementById('bowelSub').textContent = `${calMonth + 1}月のうち（全${lastDay}日）`;
+}
+
+/* =========================================
+   日付詳細モーダル
+========================================= */
+function openDayDetail(dateStr) {
+  const d = parseYmd(dateStr);
+  document.getElementById('dayModalTitle').textContent =
+    `${d.getMonth() + 1}/${d.getDate()}（${DOW_JP[d.getDay()]}）`;
+
+  const list = document.getElementById('dayDetailList');
+  list.innerHTML = '';
+
+  // 排便
+  const bowel = state.bowelRecords[dateStr];
+  const bowelLi = document.createElement('li');
+  bowelLi.className = 'day-detail-item';
+  bowelLi.style.cursor = 'pointer';
+  if (bowel) {
+    bowelLi.innerHTML = `
+      <div class="label">排便記録</div>
+      <div>${bowel.passed ? '✓ あり' : '— なし'}${bowel.bleeding ? '（出血あり）' : ''}</div>
+      ${bowel.memo ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;"></div>` : ''}
+      <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
+    `;
+    if (bowel.memo) {
+      bowelLi.querySelectorAll('div')[2].textContent = bowel.memo;
+    }
+  } else {
+    bowelLi.innerHTML = `
+      <div class="label">排便</div>
+      <div style="color: var(--ink-mute);">未記録（タップで追加）</div>
+    `;
+  }
+  bowelLi.onclick = () => { closeModal('dayModal'); setTimeout(() => openBowelModal(dateStr), 250); };
+  list.appendChild(bowelLi);
+
+  // 生理
+  const periodRec = state.periodRecords.find(p => {
+    const endBound = p.end || todayStr();
+    return dateStr >= p.start && dateStr <= endBound;
+  });
+  const periodLi = document.createElement('li');
+  periodLi.className = 'day-detail-item';
+  periodLi.style.cursor = 'pointer';
+  if (periodRec) {
+    const dayNum = dayDiff(periodRec.start, dateStr) + 1;
+    periodLi.innerHTML = `
+      <div class="label">生理（${dayNum}日目）</div>
+      <div>${formatJP(periodRec.start)}〜${periodRec.end ? formatJP(periodRec.end) : '継続中'}　量：${periodRec.flow || '未記録'}</div>
+      ${periodRec.memo ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;"></div>` : ''}
+      <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
+    `;
+    if (periodRec.memo) {
+      periodLi.querySelectorAll('div')[2].textContent = periodRec.memo;
+    }
+  } else {
+    periodLi.innerHTML = `
+      <div class="label">生理</div>
+      <div style="color: var(--ink-mute);">記録なし（タップで追加）</div>
+    `;
+  }
+  periodLi.onclick = () => { closeModal('dayModal'); setTimeout(() => openPeriodModal(dateStr), 250); };
+  list.appendChild(periodLi);
+
+  // タスク
+  const dayTasks = state.tasks.filter(t => t.date === dateStr);
+  if (dayTasks.length > 0) {
+    dayTasks.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'day-detail-item';
+      li.style.cursor = 'pointer';
+      li.innerHTML = `
+        <div class="label">${t.time ? '⏱ ' + t.time : '予定'}${t.done ? '（完了）' : ''}</div>
+        <div></div>
+        <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
+      `;
+      li.querySelectorAll('div')[1].textContent = t.title;
+      li.onclick = () => { closeModal('dayModal'); setTimeout(() => editTask(t.id), 250); };
+      list.appendChild(li);
+    });
+  }
+
+  // ヒトリゴト
+  const dayMemos = state.memos.filter(m => m.date === dateStr);
+  if (dayMemos.length > 0) {
+    dayMemos.sort((a, b) => a.time.localeCompare(b.time));
+    dayMemos.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'day-detail-item';
+      li.style.cursor = 'pointer';
+      li.innerHTML = `
+        <div class="label">${TAG_EMOJI[m.tag] || '💭'} ${m.tag} ・ ${m.time}</div>
+        <div></div>
+        <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
+      `;
+      li.querySelectorAll('div')[1].textContent = m.text;
+      li.onclick = () => { closeModal('dayModal'); setTimeout(() => openMemoEdit(m.id), 250); };
+      list.appendChild(li);
+    });
+  }
+
+  showModal('dayModal');
+}
+
+/* =========================================
+   繰り返しタスク管理
+========================================= */
+let recurringDaysSelected = new Set();
+
+function openRecurringModal() {
+  recurringDaysSelected = new Set();
+  document.getElementById('recurringTitle').value = '';
+  document.getElementById('recurringTime').value = '';
+  document.querySelectorAll('#recurringDays .day-btn').forEach(b => b.classList.remove('active'));
+  renderRecurringList();
+  showModal('recurringModal');
+}
+
+function renderRecurringList() {
+  const list = document.getElementById('recurringList');
+  list.innerHTML = '';
+  if (state.recurringTasks.length === 0) {
+    list.innerHTML = '<div class="empty-msg">繰り返しタスクはまだありません</div>';
+    return;
+  }
+  state.recurringTasks.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'recurring-item';
+    const dayLabels = r.days.map(d => DOW_JP[d]).join('・');
+    div.innerHTML = `
+      <div>
+        <div class="recurring-info"></div>
+        <div class="recurring-meta">${r.time ? r.time + ' / ' : ''}${dayLabels}曜</div>
+      </div>
+      <button class="recurring-del" onclick="deleteRecurring('${r.id}')">削除</button>
+    `;
+    div.querySelector('.recurring-info').textContent = r.title;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('recurringDays').addEventListener('click', e => {
+  const btn = e.target.closest('.day-btn');
+  if (!btn) return;
+  const day = Number(btn.dataset.day);
+  if (recurringDaysSelected.has(day)) {
+    recurringDaysSelected.delete(day);
+    btn.classList.remove('active');
+  } else {
+    recurringDaysSelected.add(day);
+    btn.classList.add('active');
+  }
+});
+
+function addRecurring() {
+  const title = document.getElementById('recurringTitle').value.trim();
+  const time = document.getElementById('recurringTime').value;
+  if (!title) { alert('タスク名を入力してください'); return; }
+  if (recurringDaysSelected.size === 0) { alert('曜日を1つ以上選んでください'); return; }
+
+  state.recurringTasks.push({
+    id: uid(),
+    title,
+    time,
+    days: Array.from(recurringDaysSelected).sort()
+  });
+  saveData();
+  document.getElementById('recurringTitle').value = '';
+  document.getElementById('recurringTime').value = '';
+  recurringDaysSelected.clear();
+  document.querySelectorAll('#recurringDays .day-btn').forEach(b => b.classList.remove('active'));
+  renderRecurringList();
+  renderTasks();
+}
+
+function deleteRecurring(id) {
+  if (!confirm('この繰り返しタスクを削除しますか？\n（過去のチェック履歴も消えます）')) return;
+  state.recurringTasks = state.recurringTasks.filter(r => r.id !== id);
+  Object.keys(state.recurringDone).forEach(k => {
+    if (k.endsWith('_' + id)) delete state.recurringDone[k];
+  });
+  saveData();
+  renderRecurringList();
+  renderTasks();
+}
+
+/* =========================================
+   バックアップ
+========================================= */
+function exportData() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const today = todayStr();
+  const filename = `hitorigoto_backup_${today}.json`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  state.lastBackup = new Date().toISOString();
+  saveData();
+  setTimeout(() => {
+    alert('バックアップを保存しました。\n共有シートからiCloud DriveやGoogle Driveに保存できます。');
+    renderHeader();
+  }, 200);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!confirm('現在のデータを上書きします。よろしいですか？\n（バックアップを取っていない場合は先に「バックアップを保存」を実行してください）')) {
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.bowelRecords && !imported.periodRecords && !imported.tasks && !imported.memos) {
+        throw new Error('形式が違います');
+      }
+      state = Object.assign(JSON.parse(JSON.stringify(defaultData)), imported);
+      saveData();
+      renderAll();
+      alert('読み込みが完了しました。');
+    } catch (err) {
+      alert('ファイルの読み込みに失敗しました：' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================
+   モーダル制御
+========================================= */
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-backdrop').forEach(bg => {
+  bg.addEventListener('click', e => {
+    if (e.target === bg) closeModal(bg.id);
+  });
+});
+
+function openHelp() { showModal('helpModal'); }
+
+/* =========================================
+   全体描画
+========================================= */
+function renderAll() {
+  renderHeader();
+  renderTasks();
+  renderTodayStatus();
+  renderTodayMemos();
+  renderCalendar();
+  renderSummary();
+}
+
+/* =========================================
+   起動
+========================================= */
+initCalendar();
+renderAll();
+
+let lastDate = todayStr();
+setInterval(() => {
+  if (todayStr() !== lastDate) {
+    lastDate = todayStr();
+    renderAll();
+  }
+}, 60000);
+
+/* =========================================
+   Service Worker 登録
+========================================= */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.log('SW登録失敗:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>

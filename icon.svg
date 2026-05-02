@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 背景：テラコッタ・角丸 -->
+  <rect x="0" y="0" width="512" height="512" rx="115" ry="115" fill="#d8a48f"/>
+  <!-- アイコン本体（ビューポート100基準を512にスケール） -->
+  <g transform="scale(5.12)">
+    <!-- 雫（左上、クリーム色） -->
+    <path d="M 28 26 C 28 26, 22 36, 22 41 A 5 5 0 0 0 34 41 C 34 36, 28 26, 28 26 Z" fill="#f8f3ea"/>
+    <!-- 同心円の波紋（右下） -->
+    <circle cx="60" cy="62" r="6" fill="none" stroke="#f8f3ea" stroke-width="1.5"/>
+    <circle cx="60" cy="62" r="14" fill="none" stroke="#f8f3ea" stroke-width="1.3" opacity="0.75"/>
+    <circle cx="60" cy="62" r="24" fill="none" stroke="#f8f3ea" stroke-width="1.1" opacity="0.5"/>
+    <circle cx="60" cy="62" r="34" fill="none" stroke="#f8f3ea" stroke-width="0.9" opacity="0.25"/>
+  </g>
+</svg>
