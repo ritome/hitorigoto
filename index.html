@@ -235,6 +235,73 @@
     padding: 20px 0;
   }
 
+  /* ============ 予定リスト ============ */
+  .event-list { list-style: none; padding: 0; margin: 0; }
+  .event-item {
+    display: flex;
+    gap: 10px;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-marker {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+  .event-content { flex: 1; min-width: 0; }
+  .event-title {
+    font-size: 15px;
+    color: var(--ink);
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .event-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    flex-wrap: wrap;
+  }
+  .event-time { color: var(--accent); font-weight: 500; }
+  .event-when {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .event-loc {
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .event-memo {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    word-break: break-word;
+  }
+  .btn-add-event {
+    width: 100%;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    margin-top: 6px;
+  }
+  .dot-event { background: var(--accent); }
+
+  .day-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .day-add-row .btn { flex: 1; margin-top: 0; padding: 11px 8px; font-size: 14px; }
+
   /* ============ ボタン ============ */
   .btn {
     appearance: none;
@@ -771,6 +838,25 @@
     </h2>
     <ul class="task-list" id="taskList"></ul>
     <button class="btn btn-add" onclick="openTaskModal()">＋ タスクを追加</button>
+    <button class="btn btn-add-event" onclick="openEventModal()">＋ 予定を追加</button>
+  </section>
+
+  <!-- 今日の予定（その日に予定がある時だけ表示） -->
+  <section class="section" id="todayEventsSection" style="display:none;">
+    <h2 class="section-title">
+      <span class="section-icon">📅</span>
+      今日の予定
+    </h2>
+    <ul class="event-list" id="todayEventList"></ul>
+  </section>
+
+  <!-- 今後の予定（明日〜14日先、ある時だけ表示） -->
+  <section class="section" id="upcomingEventsSection" style="display:none;">
+    <h2 class="section-title">
+      <span class="section-icon">📌</span>
+      今後の予定
+    </h2>
+    <ul class="event-list" id="upcomingEventList"></ul>
   </section>
 
   <!-- 体調記録 -->
@@ -826,7 +912,8 @@
       <span><span class="dot dot-bowel" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>排便</span>
       <span><span style="display:inline-block; width:10px; height:10px; background:var(--period-soft); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>生理</span>
       <span><span style="display:inline-block; width:10px; height:10px; background:repeating-linear-gradient(45deg,var(--period-soft),var(--period-soft) 2px,transparent 2px,transparent 4px); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>予測</span>
-      <span><span class="dot dot-task" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>予定</span>
+      <span><span class="dot dot-task" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>タスク</span>
+      <span><span class="dot dot-event" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>予定</span>
       <span><span class="dot dot-memo" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>メモ</span>
     </div>
   </section>
@@ -905,6 +992,39 @@
       <button class="btn btn-save" onclick="saveTask()">保存</button>
     </div>
     <button class="btn btn-delete" id="taskDeleteBtn" style="display:none;" onclick="deleteEditingTask()">このタスクを削除</button>
+  </div>
+</div>
+
+<!-- ========== モーダル：予定追加/編集 ========== -->
+<div class="modal-backdrop" id="eventModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title" id="eventModalTitle">予定を追加</h3>
+    <div class="form-row">
+      <label class="form-label">タイトル</label>
+      <input type="text" class="form-input" id="eventTitle" placeholder="例：診察、〇〇さんと打ち合わせ">
+    </div>
+    <div class="form-row">
+      <label class="form-label">日付</label>
+      <input type="date" class="form-input" id="eventDate">
+    </div>
+    <div class="form-row">
+      <label class="form-label">時間（任意）</label>
+      <input type="time" class="form-input" id="eventTime">
+    </div>
+    <div class="form-row">
+      <label class="form-label">場所（任意）</label>
+      <input type="text" class="form-input" id="eventLocation" placeholder="例：〇〇クリニック、自宅">
+    </div>
+    <div class="form-row">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="eventMemo" placeholder="持ち物・準備など"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('eventModal')">キャンセル</button>
+      <button class="btn btn-save" onclick="saveEvent()">保存</button>
+    </div>
+    <button class="btn btn-delete" id="eventDeleteBtn" style="display:none;" onclick="deleteEditingEvent()">この予定を削除</button>
   </div>
 </div>
 
@@ -1017,6 +1137,10 @@
     <div class="modal-handle"></div>
     <h3 class="modal-title" id="dayModalTitle">—</h3>
     <ul class="day-detail-list" id="dayDetailList"></ul>
+    <div class="day-add-row">
+      <button class="btn btn-add" onclick="addTaskFromDay()">＋ タスクを追加</button>
+      <button class="btn btn-add-event" onclick="addEventFromDay()">＋ 予定を追加</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('dayModal')">閉じる</button>
     </div>
@@ -1094,8 +1218,10 @@
       </ul>
       <p><strong>🔁 繰り返しタスク</strong><br>
       毎朝の薬など、決まった曜日のタスクは「設定 → 繰り返しタスクの管理」で登録すれば毎日自動で表示されます。</p>
+      <p><strong>📅 予定（イベント）</strong><br>
+      診察・面談・約束など、時間が決まった出来事は「＋ 予定を追加」から登録。タイトル・日付・時間・場所・メモが残せます。今日の予定と今後14日先までの予定がトップに自動で並びます（過ぎたら自動で消えます）。</p>
       <p><strong>📅 カレンダー</strong><br>
-      過去の日付をタップすると、その日の記録や予定、ヒトリゴトが見られます。生理期間は色付き、次回予測は斜線で表示。</p>
+      過去の日付をタップすると、その日の記録や予定、ヒトリゴトが見られます。日付モーダルからもタスク・予定を直接追加できます。生理期間は色付き、次回予測は斜線で表示。</p>
       <p><strong>📔 振り返る</strong><br>
       「設定 → ヒトリゴトを振り返る」で、過去のメモをタグで絞り込んで見返せます。</p>
       <p><strong>💾 バックアップ（大事！）</strong><br>
@@ -1132,6 +1258,7 @@ const defaultData = {
   bowelRecords: {},
   periodRecords: [],
   tasks: [],
+  events: [],         // [ { id, date, time, title, location, memo } ]
   recurringTasks: [],
   recurringDone: {},
   memos: [],          // [ { id, date, time, tag, text } ]
@@ -1313,11 +1440,11 @@ function deleteTask(id) {
 }
 
 let editingTaskId = null;
-function openTaskModal() {
+function openTaskModal(date) {
   editingTaskId = null;
   document.getElementById('taskModalTitle').textContent = 'タスクを追加';
   document.getElementById('taskTitle').value = '';
-  document.getElementById('taskDate').value = todayStr();
+  document.getElementById('taskDate').value = date || todayStr();
   document.getElementById('taskTime').value = '';
   document.getElementById('taskDeleteBtn').style.display = 'none';
   showModal('taskModal');
@@ -1356,6 +1483,175 @@ function saveTask() {
   }
   saveData();
   closeModal('taskModal');
+  renderAll();
+}
+
+/* =========================================
+   予定（events）
+========================================= */
+function sortByTime(a, b) {
+  if (!a.time && !b.time) return 0;
+  if (!a.time) return 1;
+  if (!b.time) return -1;
+  return a.time.localeCompare(b.time);
+}
+
+function getTodayEvents() {
+  const today = todayStr();
+  return state.events.filter(e => e.date === today).sort(sortByTime);
+}
+
+function getUpcomingEvents() {
+  const today = todayStr();
+  return state.events
+    .filter(e => {
+      const diff = dayDiff(today, e.date);
+      return diff >= 1 && diff <= 14;
+    })
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return sortByTime(a, b);
+    });
+}
+
+function relativeDayLabel(dateStr) {
+  const diff = dayDiff(todayStr(), dateStr);
+  if (diff === 0) return '今日';
+  if (diff === 1) return '明日';
+  if (diff === 2) return '明後日';
+  if (diff > 0) return `${diff}日後`;
+  return `${-diff}日前`;
+}
+
+function buildEventItem(e, opts) {
+  const li = document.createElement('li');
+  li.className = 'event-item';
+  li.onclick = () => editEvent(e.id);
+
+  const marker = document.createElement('div');
+  marker.className = 'event-marker';
+  li.appendChild(marker);
+
+  const content = document.createElement('div');
+  content.className = 'event-content';
+
+  const title = document.createElement('div');
+  title.className = 'event-title';
+  title.textContent = e.title;
+  content.appendChild(title);
+
+  const meta = document.createElement('div');
+  meta.className = 'event-meta';
+  if (opts && opts.showWhen) {
+    const when = document.createElement('span');
+    when.className = 'event-when';
+    when.textContent = relativeDayLabel(e.date);
+    meta.appendChild(when);
+  }
+  if (e.time) {
+    const t = document.createElement('span');
+    t.className = 'event-time';
+    t.textContent = '⏱ ' + e.time;
+    meta.appendChild(t);
+  }
+  if (e.location) {
+    const loc = document.createElement('span');
+    loc.className = 'event-loc';
+    loc.textContent = '📍 ' + e.location;
+    meta.appendChild(loc);
+  }
+  if (meta.children.length > 0) content.appendChild(meta);
+
+  if (e.memo) {
+    const memo = document.createElement('div');
+    memo.className = 'event-memo';
+    memo.textContent = e.memo;
+    content.appendChild(memo);
+  }
+
+  li.appendChild(content);
+  return li;
+}
+
+function renderTodayEvents() {
+  const section = document.getElementById('todayEventsSection');
+  const list = document.getElementById('todayEventList');
+  const items = getTodayEvents();
+  list.innerHTML = '';
+  if (items.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  items.forEach(e => list.appendChild(buildEventItem(e, { showWhen: false })));
+}
+
+function renderUpcomingEvents() {
+  const section = document.getElementById('upcomingEventsSection');
+  const list = document.getElementById('upcomingEventList');
+  const items = getUpcomingEvents();
+  list.innerHTML = '';
+  if (items.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  items.forEach(e => list.appendChild(buildEventItem(e, { showWhen: true })));
+}
+
+let editingEventId = null;
+function openEventModal(date) {
+  editingEventId = null;
+  document.getElementById('eventModalTitle').textContent = '予定を追加';
+  document.getElementById('eventTitle').value = '';
+  document.getElementById('eventDate').value = date || todayStr();
+  document.getElementById('eventTime').value = '';
+  document.getElementById('eventLocation').value = '';
+  document.getElementById('eventMemo').value = '';
+  document.getElementById('eventDeleteBtn').style.display = 'none';
+  showModal('eventModal');
+}
+
+function editEvent(id) {
+  const e = state.events.find(x => x.id === id);
+  if (!e) return;
+  editingEventId = id;
+  document.getElementById('eventModalTitle').textContent = '予定を編集';
+  document.getElementById('eventTitle').value = e.title;
+  document.getElementById('eventDate').value = e.date;
+  document.getElementById('eventTime').value = e.time || '';
+  document.getElementById('eventLocation').value = e.location || '';
+  document.getElementById('eventMemo').value = e.memo || '';
+  document.getElementById('eventDeleteBtn').style.display = 'block';
+  showModal('eventModal');
+}
+
+function saveEvent() {
+  const title = document.getElementById('eventTitle').value.trim();
+  const date = document.getElementById('eventDate').value;
+  const time = document.getElementById('eventTime').value;
+  const location = document.getElementById('eventLocation').value.trim();
+  const memo = document.getElementById('eventMemo').value.trim();
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!date) { alert('日付を選んでください'); return; }
+
+  if (editingEventId) {
+    const e = state.events.find(x => x.id === editingEventId);
+    if (e) { e.title = title; e.date = date; e.time = time; e.location = location; e.memo = memo; }
+  } else {
+    state.events.push({ id: uid(), title, date, time, location, memo });
+  }
+  saveData();
+  closeModal('eventModal');
+  renderAll();
+}
+
+function deleteEditingEvent() {
+  if (!editingEventId) return;
+  if (!confirm('この予定を削除しますか？')) return;
+  state.events = state.events.filter(e => e.id !== editingEventId);
+  saveData();
+  closeModal('eventModal');
   renderAll();
 }
 
@@ -1768,6 +2064,7 @@ function renderCalendar() {
 
     const hasBowel = !!state.bowelRecords[dateStr];
     const hasTask = state.tasks.some(t => t.date === dateStr);
+    const hasEvent = state.events.some(e => e.date === dateStr);
     const hasMemo = state.memos.some(m => m.date === dateStr);
 
     btn.innerHTML = `
@@ -1775,6 +2072,7 @@ function renderCalendar() {
       <span class="day-dots">
         ${hasBowel ? '<span class="dot dot-bowel"></span>' : ''}
         ${hasTask ? '<span class="dot dot-task"></span>' : ''}
+        ${hasEvent ? '<span class="dot dot-event"></span>' : ''}
         ${hasMemo ? '<span class="dot dot-memo"></span>' : ''}
       </span>
     `;
@@ -1856,7 +2154,21 @@ function renderSummary() {
 /* =========================================
    日付詳細モーダル
 ========================================= */
+let dayDetailDate = null;
+
+function addTaskFromDay() {
+  const d = dayDetailDate;
+  closeModal('dayModal');
+  setTimeout(() => openTaskModal(d), 250);
+}
+function addEventFromDay() {
+  const d = dayDetailDate;
+  closeModal('dayModal');
+  setTimeout(() => openEventModal(d), 250);
+}
+
 function openDayDetail(dateStr) {
+  dayDetailDate = dateStr;
   const d = parseYmd(dateStr);
   document.getElementById('dayModalTitle').textContent =
     `${d.getMonth() + 1}/${d.getDate()}（${DOW_JP[d.getDay()]}）`;
@@ -1924,12 +2236,61 @@ function openDayDetail(dateStr) {
       li.className = 'day-detail-item';
       li.style.cursor = 'pointer';
       li.innerHTML = `
-        <div class="label">${t.time ? '⏱ ' + t.time : '予定'}${t.done ? '（完了）' : ''}</div>
+        <div class="label">✓ ${t.time ? '⏱ ' + t.time + ' ・ ' : ''}タスク${t.done ? '（完了）' : ''}</div>
         <div></div>
         <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
       `;
       li.querySelectorAll('div')[1].textContent = t.title;
       li.onclick = () => { closeModal('dayModal'); setTimeout(() => editTask(t.id), 250); };
+      list.appendChild(li);
+    });
+  }
+
+  // 予定（events）
+  const dayEvents = state.events.filter(e => e.date === dateStr).sort(sortByTime);
+  if (dayEvents.length > 0) {
+    dayEvents.forEach(e => {
+      const li = document.createElement('li');
+      li.className = 'day-detail-item';
+      li.style.cursor = 'pointer';
+      li.style.borderLeft = '3px solid var(--accent)';
+      li.style.paddingLeft = '9px';
+
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.style.color = 'var(--accent-deep)';
+      label.textContent = `📅 ${e.time ? e.time + ' ・ ' : ''}予定`;
+      li.appendChild(label);
+
+      const titleDiv = document.createElement('div');
+      titleDiv.textContent = e.title;
+      li.appendChild(titleDiv);
+
+      if (e.location) {
+        const loc = document.createElement('div');
+        loc.style.fontSize = '12px';
+        loc.style.color = 'var(--ink-soft)';
+        loc.style.marginTop = '3px';
+        loc.textContent = '📍 ' + e.location;
+        li.appendChild(loc);
+      }
+      if (e.memo) {
+        const memo = document.createElement('div');
+        memo.style.fontSize = '12px';
+        memo.style.color = 'var(--ink-soft)';
+        memo.style.marginTop = '3px';
+        memo.textContent = e.memo;
+        li.appendChild(memo);
+      }
+
+      const hint = document.createElement('div');
+      hint.style.fontSize = '11px';
+      hint.style.color = 'var(--ink-mute)';
+      hint.style.marginTop = '6px';
+      hint.textContent = 'タップして編集';
+      li.appendChild(hint);
+
+      li.onclick = () => { closeModal('dayModal'); setTimeout(() => editEvent(e.id), 250); };
       list.appendChild(li);
     });
   }
@@ -2075,7 +2436,7 @@ function importData(event) {
   reader.onload = e => {
     try {
       const imported = JSON.parse(e.target.result);
-      if (!imported.bowelRecords && !imported.periodRecords && !imported.tasks && !imported.memos) {
+      if (!imported.bowelRecords && !imported.periodRecords && !imported.tasks && !imported.memos && !imported.events) {
         throw new Error('形式が違います');
       }
       state = Object.assign(JSON.parse(JSON.stringify(defaultData)), imported);
@@ -2115,6 +2476,8 @@ function openHelp() { showModal('helpModal'); }
 function renderAll() {
   renderHeader();
   renderTasks();
+  renderTodayEvents();
+  renderUpcomingEvents();
   renderTodayStatus();
   renderTodayMemos();
   renderCalendar();
