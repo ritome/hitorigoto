@@ -116,6 +116,12 @@
     font-size: 13px;
     color: var(--ink-soft);
   }
+  .date-backup {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
   .app-mark {
     font-size: 10px;
     color: var(--ink-mute);
@@ -469,6 +475,31 @@
     cursor: pointer;
   }
   .cal-month { font-size: 16px; font-weight: 600; }
+  .cal-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .cal-filter-btn {
+    flex: 1;
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-mute);
+    padding: 6px 6px;
+    border-radius: 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .cal-filter-btn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-soft);
+    font-weight: 500;
+  }
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -566,6 +597,27 @@
 
   /* ============ 設定 ============ */
   .settings-list { display: flex; flex-direction: column; gap: 6px; }
+  .btn-quick-backup {
+    appearance: none;
+    border: none;
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    padding: 13px 16px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.1s, opacity 0.15s;
+    box-shadow: 0 2px 8px rgba(184, 116, 92, 0.18);
+  }
+  .btn-quick-backup:active { transform: scale(0.98); }
   .settings-btn {
     appearance: none;
     border: 1px solid var(--line);
@@ -793,6 +845,66 @@
     padding-left: 4px;
   }
 
+  /* ============ トースト ＆ クローバー ============ */
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--accent);
+    padding: 11px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 18px rgba(60, 50, 30, 0.14), 0 1px 3px rgba(60, 50, 30, 0.06);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .clover-layer {
+    position: fixed;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    left: 50%;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    z-index: 199;
+  }
+  .clover {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 24px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    animation: cloverFloat 2s ease-out forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes cloverFloat {
+    0% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--start-x, 0px)), 0) rotate(0deg);
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--end-x, 0px)), -130px) rotate(var(--rot, 18deg));
+    }
+  }
+
   @media (max-width: 360px) {
     .container { padding: 12px 10px 80px; }
     .date-main { font-size: 22px; }
@@ -824,6 +936,7 @@
       <div>
         <div class="date-main" id="dateMain">—</div>
         <div class="date-sub" id="dateSub">—</div>
+        <div class="date-backup" id="dateBackup"></div>
       </div>
       <div class="app-mark">ヒトリゴト</div>
     </div>
@@ -907,6 +1020,12 @@
       <div class="cal-month" id="calMonth">—</div>
       <button class="cal-nav" onclick="changeMonth(1)">›</button>
     </div>
+    <div class="cal-filter">
+      <button class="cal-filter-btn active" data-cal-filter="all" onclick="setCalFilter('all')">すべて</button>
+      <button class="cal-filter-btn" data-cal-filter="health" onclick="setCalFilter('health')">体調</button>
+      <button class="cal-filter-btn" data-cal-filter="schedule" onclick="setCalFilter('schedule')">予定</button>
+      <button class="cal-filter-btn" data-cal-filter="memo" onclick="setCalFilter('memo')">メモ</button>
+    </div>
     <div class="cal-grid" id="calGrid"></div>
     <div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:11px; color:var(--ink-mute); flex-wrap:wrap;">
       <span><span class="dot dot-bowel" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>排便</span>
@@ -945,6 +1064,7 @@
       設定・バックアップ
     </h2>
     <div class="settings-list">
+      <button class="btn-quick-backup" onclick="exportData()">📥 すぐバックアップ</button>
       <button class="settings-btn" onclick="openMemoHistoryModal()">
         <span>📔 ヒトリゴトを振り返る</span><span class="arrow">›</span>
       </button>
@@ -1338,21 +1458,23 @@ function renderHeader() {
   document.getElementById('dateSub').textContent =
     `${d.getFullYear()}年（${DOW_JP[d.getDay()]}）`;
 
+  const backupLine = document.getElementById('dateBackup');
   const banner = document.getElementById('backupBanner');
   if (state.lastBackup) {
     const days = Math.floor((Date.now() - new Date(state.lastBackup).getTime()) / 86400000);
+    backupLine.textContent = days === 0 ? '最終バックアップ：今日' : `最終バックアップ：${days}日前`;
     if (days >= 14) {
-      banner.className = 'backup-banner danger show';
-      banner.textContent = `⚠️ 最後のバックアップから${days}日経過しています。設定からバックアップを保存してください。`;
+      banner.className = 'backup-banner warn show';
+      banner.textContent = '📥 大切な記録を守るため、バックアップをおすすめします';
     } else if (days >= 7) {
       banner.className = 'backup-banner warn show';
-      banner.textContent = `📥 最後のバックアップから${days}日経過しました。そろそろ保存をおすすめします。`;
+      banner.textContent = '📥 そろそろバックアップしませんか？';
     } else {
       banner.className = 'backup-banner';
     }
   } else {
-    banner.className = 'backup-banner warn show';
-    banner.textContent = '📥 まだバックアップがありません。設定から保存しておきましょう。';
+    backupLine.textContent = '';
+    banner.className = 'backup-banner';
   }
 }
 
@@ -1484,6 +1606,7 @@ function saveTask() {
   saveData();
   closeModal('taskModal');
   renderAll();
+  showToast('保存しました ✓');
 }
 
 /* =========================================
@@ -1644,6 +1767,7 @@ function saveEvent() {
   saveData();
   closeModal('eventModal');
   renderAll();
+  showToast('保存しました ✓');
 }
 
 function deleteEditingEvent() {
@@ -1711,6 +1835,7 @@ function saveBowel() {
   saveData();
   closeModal('bowelModal');
   renderAll();
+  showToast('保存しました ✓');
 }
 
 function deleteBowel() {
@@ -1778,6 +1903,7 @@ function savePeriod() {
   saveData();
   closeModal('periodModal');
   renderAll();
+  showToast('保存しました ✓');
 }
 
 function deletePeriod() {
@@ -1809,17 +1935,20 @@ function saveMemo() {
   const text = document.getElementById('memoInput').value.trim();
   if (!text) { alert('内容を入力してください'); return; }
 
+  const tag = selectedMemoTag;
   state.memos.push({
     id: uid(),
     date: todayStr(),
     time: nowTimeStr(),
-    tag: selectedMemoTag,
+    tag: tag,
     text: text
   });
   saveData();
   document.getElementById('memoInput').value = '';
   renderTodayMemos();
   renderCalendar();
+  showToast('保存しました ✓');
+  if (tag === 'ありがとう') spawnClovers();
 }
 
 function renderTodayMemos() {
@@ -1888,6 +2017,8 @@ function saveMemoEdit() {
   saveData();
   closeModal('memoEditModal');
   renderAll();
+  showToast('保存しました ✓');
+  if (editingMemoTag === 'ありがとう') spawnClovers();
 }
 
 function deleteEditingMemo() {
@@ -2005,11 +2136,20 @@ function renderTodayStatus() {
    カレンダー
 ========================================= */
 let calYear, calMonth;
+let calFilter = 'all'; // 'all' | 'health' | 'schedule' | 'memo'
 
 function initCalendar() {
   const d = new Date();
   calYear = d.getFullYear();
   calMonth = d.getMonth();
+}
+
+function setCalFilter(f) {
+  calFilter = f;
+  document.querySelectorAll('.cal-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.calFilter === f);
+  });
+  renderCalendar();
 }
 
 function changeMonth(delta) {
@@ -2044,6 +2184,10 @@ function renderCalendar() {
     grid.appendChild(cell);
   }
 
+  const showHealth = calFilter === 'all' || calFilter === 'health';
+  const showSchedule = calFilter === 'all' || calFilter === 'schedule';
+  const showMemo = calFilter === 'all' || calFilter === 'memo';
+
   for (let day = 1; day <= lastDay; day++) {
     const dateStr = ymd(new Date(calYear, calMonth, day));
     const btn = document.createElement('button');
@@ -2055,9 +2199,11 @@ function renderCalendar() {
       const endBound = p.end || today;
       return dateStr >= p.start && dateStr <= endBound;
     });
-    if (inPeriod) cls += ' period';
-    if (predicted && dateStr >= predicted.start && dateStr <= predicted.end) {
-      if (!inPeriod) cls += ' predicted';
+    if (showHealth) {
+      if (inPeriod) cls += ' period';
+      if (predicted && dateStr >= predicted.start && dateStr <= predicted.end) {
+        if (!inPeriod) cls += ' predicted';
+      }
     }
     if (dateStr === today) cls += ' today';
     btn.className = 'cal-day' + cls;
@@ -2070,10 +2216,10 @@ function renderCalendar() {
     btn.innerHTML = `
       <span class="day-num">${day}</span>
       <span class="day-dots">
-        ${hasBowel ? '<span class="dot dot-bowel"></span>' : ''}
-        ${hasTask ? '<span class="dot dot-task"></span>' : ''}
-        ${hasEvent ? '<span class="dot dot-event"></span>' : ''}
-        ${hasMemo ? '<span class="dot dot-memo"></span>' : ''}
+        ${showHealth && hasBowel ? '<span class="dot dot-bowel"></span>' : ''}
+        ${showSchedule && hasTask ? '<span class="dot dot-task"></span>' : ''}
+        ${showSchedule && hasEvent ? '<span class="dot dot-event"></span>' : ''}
+        ${showMemo && hasMemo ? '<span class="dot dot-memo"></span>' : ''}
       </span>
     `;
     grid.appendChild(btn);
@@ -2386,6 +2532,7 @@ function addRecurring() {
   document.querySelectorAll('#recurringDays .day-btn').forEach(b => b.classList.remove('active'));
   renderRecurringList();
   renderTasks();
+  showToast('保存しました ✓');
 }
 
 function deleteRecurring(id) {
@@ -2449,6 +2596,47 @@ function importData(event) {
     event.target.value = '';
   };
   reader.readAsText(file);
+}
+
+/* =========================================
+   保存フィードバック（トースト・クローバー）
+========================================= */
+let _toastHideTimer = null;
+function showToast(message) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = message;
+  // 強制的にリフロー → トランジション再発火
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(_toastHideTimer);
+  _toastHideTimer = setTimeout(() => t.classList.remove('show'), 1300);
+}
+
+function spawnClovers(count = 4) {
+  const layer = document.createElement('div');
+  layer.className = 'clover-layer';
+  for (let i = 0; i < count; i++) {
+    const c = document.createElement('div');
+    c.className = 'clover';
+    c.textContent = '☘';
+    const startX = (Math.random() - 0.5) * 80;             // -40 〜 +40
+    const endX   = startX + (Math.random() - 0.5) * 70;    // ふわっと横に揺れる
+    const rot    = (Math.random() - 0.5) * 50;             // -25 〜 +25 度
+    c.style.setProperty('--start-x', startX + 'px');
+    c.style.setProperty('--end-x', endX + 'px');
+    c.style.setProperty('--rot', rot + 'deg');
+    c.style.animationDelay = (Math.random() * 200) + 'ms';
+    layer.appendChild(c);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 2400);
 }
 
 /* =========================================
