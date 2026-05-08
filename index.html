@@ -28,6 +28,8 @@
     --bowel-soft: #e0e8d6;
     --period: #b56868;          /* 生理：柔らかな朱 */
     --period-soft: #f5dcd6;
+    --headache: #c47878;        /* 頭痛：くすみローズ */
+    --headache-soft: #f5dcd6;
     --task: #6b87a8;            /* タスク：落ち着いた青 */
     --task-soft: #e3eaf2;
     --memo: #8b6f9c;            /* メモ：やわらかい紫 */
@@ -339,7 +341,9 @@
   }
   .btn-bowel { background: var(--bowel-soft); color: var(--bowel); }
   .btn-period { background: var(--period-soft); color: var(--period); }
+  .btn-headache { background: var(--headache-soft); color: var(--headache); }
 
+  .record-buttons-grid { display: flex; flex-direction: column; gap: 10px; }
   .record-buttons { display: flex; gap: 10px; }
 
   /* ============ ヒトリゴト（メモ） ============ */
@@ -562,6 +566,7 @@
     border-radius: 50%;
   }
   .dot-bowel { background: var(--bowel); }
+  .dot-headache { background: var(--headache); }
   .dot-task { background: var(--task); }
   .dot-memo { background: var(--memo); }
 
@@ -690,6 +695,7 @@
   }
   .btn-save.bowel { background: var(--bowel); }
   .btn-save.period { background: var(--period); }
+  .btn-save.headache { background: var(--headache); }
   .btn-save.memo { background: var(--memo); }
   .btn-delete {
     background: transparent;
@@ -747,6 +753,7 @@
   }
   .choice-btn.active.bowel { background: var(--bowel); border-color: var(--bowel); }
   .choice-btn.active.period { background: var(--period); border-color: var(--period); }
+  .choice-btn.active.headache { background: var(--headache); border-color: var(--headache); }
 
   .day-picker { display: flex; gap: 4px; justify-content: space-between; }
   .day-btn {
@@ -980,9 +987,14 @@
       <span class="section-icon">♡</span>
       体調記録
     </h2>
-    <div class="record-buttons">
-      <button class="btn btn-record btn-bowel" onclick="openBowelModal()">排便を記録</button>
-      <button class="btn btn-record btn-period" onclick="openPeriodModal()">生理を記録</button>
+    <div class="record-buttons-grid">
+      <div class="record-buttons">
+        <button class="btn btn-record btn-bowel" onclick="openBowelModal()">排便を記録</button>
+        <button class="btn btn-record btn-period" onclick="openPeriodModal()">生理を記録</button>
+      </div>
+      <div class="record-buttons">
+        <button class="btn btn-record btn-headache" onclick="openHeadacheModal()">頭痛を記録</button>
+      </div>
     </div>
     <div id="todayStatus" style="margin-top:12px; font-size:13px; color:var(--ink-soft);"></div>
   </section>
@@ -1033,6 +1045,7 @@
       <span><span class="dot dot-bowel" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>排便</span>
       <span><span style="display:inline-block; width:10px; height:10px; background:var(--period-soft); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>生理</span>
       <span><span style="display:inline-block; width:10px; height:10px; background:repeating-linear-gradient(45deg,var(--period-soft),var(--period-soft) 2px,transparent 2px,transparent 4px); border-radius:3px; vertical-align:middle; margin-right:4px;"></span>予測</span>
+      <span><span class="dot dot-headache" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>頭痛</span>
       <span><span class="dot dot-task" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>タスク</span>
       <span><span class="dot dot-event" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>予定</span>
       <span><span class="dot dot-memo" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span>メモ</span>
@@ -1218,6 +1231,42 @@
   </div>
 </div>
 
+<!-- ========== モーダル：頭痛記録 ========== -->
+<div class="modal-backdrop" id="headacheModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">頭痛の記録</h3>
+    <div class="form-row">
+      <label class="form-label">日付</label>
+      <input type="date" class="form-input" id="headacheDate">
+    </div>
+    <div class="form-row">
+      <label class="form-label">頭痛はありましたか？</label>
+      <div class="choice-group">
+        <button class="choice-btn headache" data-headache-occurred="true" onclick="selectChoice(this, 'headache-occurred')">あった</button>
+        <button class="choice-btn headache" data-headache-occurred="false" onclick="selectChoice(this, 'headache-occurred')">なかった</button>
+      </div>
+    </div>
+    <div class="form-row" id="headacheLevelRow" style="display:none;">
+      <label class="form-label">痛みのレベル</label>
+      <div class="choice-group">
+        <button class="choice-btn headache" data-headache-level="軽い" onclick="selectChoice(this, 'headache-level')">軽い</button>
+        <button class="choice-btn headache" data-headache-level="中くらい" onclick="selectChoice(this, 'headache-level')">中くらい</button>
+        <button class="choice-btn headache" data-headache-level="重い" onclick="selectChoice(this, 'headache-level')">重い</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="headacheMemo" placeholder="痛む場所・きっかけ・薬を飲んだか など"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('headacheModal')">キャンセル</button>
+      <button class="btn btn-save headache" onclick="saveHeadache()">保存</button>
+    </div>
+    <button class="btn btn-delete" id="headacheDeleteBtn" style="display:none;" onclick="deleteHeadache()">この記録を削除</button>
+  </div>
+</div>
+
 <!-- ========== モーダル：繰り返しタスク管理 ========== -->
 <div class="modal-backdrop" id="recurringModal">
   <div class="modal">
@@ -1379,6 +1428,7 @@ const STORAGE_KEY = 'hitorigoto_v1';
 const defaultData = {
   bowelRecords: {},
   periodRecords: [],
+  headacheRecords: {},  // { [dateStr]: { occurred, level, memo } }
   tasks: [],
   events: [],         // [ { id, date, time, title, location, memo } ]
   recurringTasks: [],
@@ -1822,6 +1872,19 @@ function selectChoice(btn, group) {
   if (group === 'bowel-passed') bowelChoices.passed = btn.dataset.bowelPassed === 'true';
   if (group === 'bowel-bleeding') bowelChoices.bleeding = btn.dataset.bowelBleeding === 'true';
   if (group === 'period-flow') periodFlow = btn.dataset.periodFlow;
+  if (group === 'headache-occurred') {
+    headacheChoices.occurred = btn.dataset.headacheOccurred === 'true';
+    const levelRow = document.getElementById('headacheLevelRow');
+    if (headacheChoices.occurred) {
+      levelRow.style.display = '';
+    } else {
+      levelRow.style.display = 'none';
+      headacheChoices.level = null;
+      document.querySelectorAll('#headacheModal [data-headache-level]')
+        .forEach(b => b.classList.remove('active'));
+    }
+  }
+  if (group === 'headache-level') headacheChoices.level = btn.dataset.headacheLevel;
 }
 
 function saveBowel() {
@@ -1914,6 +1977,75 @@ function deletePeriod() {
   state.periodRecords = state.periodRecords.filter(p => p.id !== editingPeriodId);
   saveData();
   closeModal('periodModal');
+  renderAll();
+}
+
+/* =========================================
+   頭痛記録
+========================================= */
+let headacheChoices = { occurred: null, level: null };
+let editingHeadacheDate = null;
+
+function openHeadacheModal(date) {
+  const d = date || todayStr();
+  editingHeadacheDate = d;
+  document.getElementById('headacheDate').value = d;
+  const existing = state.headacheRecords[d];
+  headacheChoices = { occurred: null, level: null };
+
+  document.querySelectorAll('#headacheModal .choice-btn').forEach(b => b.classList.remove('active'));
+  const levelRow = document.getElementById('headacheLevelRow');
+
+  if (existing) {
+    headacheChoices.occurred = existing.occurred;
+    headacheChoices.level = existing.level;
+    document.getElementById('headacheMemo').value = existing.memo || '';
+    document.querySelectorAll('#headacheModal [data-headache-occurred]').forEach(b => {
+      if (b.dataset.headacheOccurred === String(existing.occurred)) b.classList.add('active');
+    });
+    if (existing.occurred) {
+      levelRow.style.display = '';
+      document.querySelectorAll('#headacheModal [data-headache-level]').forEach(b => {
+        if (b.dataset.headacheLevel === existing.level) b.classList.add('active');
+      });
+    } else {
+      levelRow.style.display = 'none';
+    }
+    document.getElementById('headacheDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('headacheMemo').value = '';
+    levelRow.style.display = 'none';
+    document.getElementById('headacheDeleteBtn').style.display = 'none';
+  }
+  showModal('headacheModal');
+}
+
+function saveHeadache() {
+  const date = document.getElementById('headacheDate').value;
+  if (!date) { alert('日付を選んでください'); return; }
+  if (headacheChoices.occurred === null) { alert('頭痛の有無を選んでください'); return; }
+  if (headacheChoices.occurred && !headacheChoices.level) {
+    alert('痛みのレベルを選んでください');
+    return;
+  }
+
+  state.headacheRecords[date] = {
+    occurred: headacheChoices.occurred,
+    level: headacheChoices.occurred ? headacheChoices.level : null,
+    memo: document.getElementById('headacheMemo').value.trim()
+  };
+  saveData();
+  closeModal('headacheModal');
+  renderAll();
+  showToast('保存しました ✓');
+}
+
+function deleteHeadache() {
+  if (!editingHeadacheDate) return;
+  if (!confirm('この記録を削除しますか？')) return;
+  delete state.headacheRecords[editingHeadacheDate];
+  saveData();
+  closeModal('headacheModal');
   renderAll();
 }
 
@@ -2131,6 +2263,15 @@ function renderTodayStatus() {
     lines.push(`生理${dayNum}日目（${inPeriod.flow || '量未記録'}）`);
   }
 
+  const headache = state.headacheRecords[today];
+  if (headache) {
+    if (headache.occurred) {
+      lines.push(`今日の頭痛：あり${headache.level ? `（${headache.level}）` : ''}`);
+    } else {
+      lines.push('今日の頭痛：— なし');
+    }
+  }
+
   document.getElementById('todayStatus').innerHTML = lines.join('<br>');
 }
 
@@ -2211,6 +2352,8 @@ function renderCalendar() {
     btn.className = 'cal-day' + cls;
 
     const hasBowel = !!state.bowelRecords[dateStr];
+    const hRec = state.headacheRecords[dateStr];
+    const hasHeadache = !!(hRec && hRec.occurred);
     const hasTask = state.tasks.some(t => t.date === dateStr);
     const hasEvent = state.events.some(e => e.date === dateStr);
     const hasMemo = state.memos.some(m => m.date === dateStr);
@@ -2219,6 +2362,7 @@ function renderCalendar() {
       <span class="day-num">${day}</span>
       <span class="day-dots">
         ${showHealth && hasBowel ? '<span class="dot dot-bowel"></span>' : ''}
+        ${showHealth && hasHeadache ? '<span class="dot dot-headache"></span>' : ''}
         ${showSchedule && hasTask ? '<span class="dot dot-task"></span>' : ''}
         ${showSchedule && hasEvent ? '<span class="dot dot-event"></span>' : ''}
         ${showMemo && hasMemo ? '<span class="dot dot-memo"></span>' : ''}
@@ -2375,6 +2519,33 @@ function openDayDetail(dateStr) {
   }
   periodLi.onclick = () => { closeModal('dayModal'); setTimeout(() => openPeriodModal(dateStr), 250); };
   list.appendChild(periodLi);
+
+  // 頭痛
+  const headache = state.headacheRecords[dateStr];
+  const headacheLi = document.createElement('li');
+  headacheLi.className = 'day-detail-item';
+  headacheLi.style.cursor = 'pointer';
+  if (headache) {
+    const text = headache.occurred
+      ? `あり${headache.level ? `（${headache.level}）` : ''}`
+      : '— なし';
+    headacheLi.innerHTML = `
+      <div class="label">頭痛</div>
+      <div>${text}</div>
+      ${headache.memo ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;"></div>` : ''}
+      <div style="font-size:11px; color:var(--ink-mute); margin-top:6px;">タップして編集</div>
+    `;
+    if (headache.memo) {
+      headacheLi.querySelectorAll('div')[2].textContent = headache.memo;
+    }
+  } else {
+    headacheLi.innerHTML = `
+      <div class="label">頭痛</div>
+      <div style="color: var(--ink-mute);">未記録（タップで追加）</div>
+    `;
+  }
+  headacheLi.onclick = () => { closeModal('dayModal'); setTimeout(() => openHeadacheModal(dateStr), 250); };
+  list.appendChild(headacheLi);
 
   // タスク
   const dayTasks = state.tasks.filter(t => t.date === dateStr);
@@ -2585,7 +2756,7 @@ function importData(event) {
   reader.onload = e => {
     try {
       const imported = JSON.parse(e.target.result);
-      if (!imported.bowelRecords && !imported.periodRecords && !imported.tasks && !imported.memos && !imported.events) {
+      if (!imported.bowelRecords && !imported.periodRecords && !imported.tasks && !imported.memos && !imported.events && !imported.headacheRecords) {
         throw new Error('形式が違います');
       }
       state = Object.assign(JSON.parse(JSON.stringify(defaultData)), imported);

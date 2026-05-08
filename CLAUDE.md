@@ -51,6 +51,7 @@
 | アクセント淡 | `--accent-soft` | `#f5e3d2` | バッジ背景 |
 | 排便 | `--bowel` / `--bowel-soft` | `#5a7048` / `#e0e8d6` | 穏やかなグリーン（クローバーSVGも同色） |
 | 生理 | `--period` / `--period-soft` | `#b56868` / `#f5dcd6` | 柔らかな朱 |
+| 頭痛 | `--headache` / `--headache-soft` | `#c47878` / `#f5dcd6` | くすみローズ。`--danger`と近いがバナーには使わない（dangerは削除文字色専用） |
 | タスク | `--task` / `--task-soft` | `#6b87a8` / `#e3eaf2` | 落ち着いた青 |
 | メモ | `--memo` / `--memo-soft` | `#8b6f9c` / `#ece4f0` | やわらかい紫 |
 | 警告 | `--warn` | `#d4a55a` | バナー類（琥珀系） |
@@ -76,14 +77,15 @@
 
 ```js
 {
-  bowelRecords: { [dateStr]: { passed: bool, bleeding: bool, memo: string } },
-  periodRecords: [ { id, start, end|null, flow, memo } ],
-  tasks:         [ { id, date, time, title, done } ],
-  events:        [ { id, date, time, title, location, memo } ],   // v2で追加
-  recurringTasks:[ { id, title, time, days: [0..6] } ],
-  recurringDone: { [`${dateStr}_${recurringId}`]: bool },
-  memos:         [ { id, date, time, tag, text } ],
-  lastBackup:    null | ISOString
+  bowelRecords:    { [dateStr]: { passed: bool, bleeding: bool, memo: string } },
+  periodRecords:   [ { id, start, end|null, flow, memo } ],
+  headacheRecords: { [dateStr]: { occurred: bool, level: string|null, memo: string } },  // v5で追加
+  tasks:           [ { id, date, time, title, done } ],
+  events:          [ { id, date, time, title, location, memo } ],   // v2で追加
+  recurringTasks:  [ { id, title, time, days: [0..6] } ],
+  recurringDone:   { [`${dateStr}_${recurringId}`]: bool },
+  memos:           [ { id, date, time, tag, text } ],
+  lastBackup:      null | ISOString
 }
 ```
 
@@ -91,6 +93,7 @@
 - `time` は `HH:MM` 文字列（任意項目は空文字）
 - `tag` は ['つぶやき' | 'ひらめき' | 'きょう' | 'ありがとう'] のいずれか
 - `flow` は ['少ない' | '普通' | '多い'] のいずれか
+- 頭痛 `level` は ['軽い' | '中くらい' | '重い'] のいずれか。`occurred: false` のときは `null`
 
 ### 互換性ルール（重要）
 
@@ -136,7 +139,7 @@ hitorigoto/
 2. **今日のタスク**：タスクリスト + 「＋ タスクを追加」 + 「＋ 予定を追加」
 3. **今日の予定**（その日に予定がある時のみ表示）
 4. **今後の予定**（明日〜14日先に予定がある時のみ表示、相対日表示）
-5. **体調記録**：「排便を記録」「生理を記録」ボタン + 今日の状況表示
+5. **体調記録**：1段目「排便を記録」「生理を記録」、2段目「頭痛を記録」+ 今日の状況表示
 6. **今日のヒトリゴト**：4タグ + テキストエリア + 保存ボタン + 今日のメモ一覧
 7. **カレンダー**：月ナビ + フィルタータブ([すべて][体調][予定][メモ]) + 日付グリッド + 凡例
 8. **サマリー**：次回生理予測 + 今月の排便日数
@@ -150,6 +153,7 @@ hitorigoto/
 | `eventModal` | 予定追加・編集 |
 | `bowelModal` | 排便記録 |
 | `periodModal` | 生理記録 |
+| `headacheModal` | 頭痛記録（有無を選ぶとレベル行が動的に表示／非表示） |
 | `recurringModal` | 繰り返しタスク管理 |
 | `dayModal` | 日付詳細（カレンダーから） |
 | `memoHistoryModal` | メモ振り返り |
@@ -219,6 +223,7 @@ python3 -m http.server 8000
 | v2 | `27cc512` | 2026-05-02 | スケジュール機能：events データ追加。今日の予定／今後14日の予定セクション。日付詳細モーダルから直接タスク／予定追加。カレンダーにテラコッタの予定ドット追加 |
 | v3 | `c4962c5` | 2026-05-02 | 第1弾改善：ヘッダーに最終バックアップ表示、催促バナーを優しく、設定最上部に「すぐバックアップ」ボタン、カレンダーに [すべて][体調][予定][メモ] フィルタ、保存トースト導入、ありがとうタグでクローバー演出（emoji） |
 | v4 | `b5a49ed` | 2026-05-02 | クローバーを emoji ☘ から `--bowel` カラーのSVGに変更（OS依存色を排除） |
+| v5 | （次のpushで採番） | 2026-05-08 | 頭痛記録を追加（headacheRecords、`--headache`色、有無＋3段階レベル＋メモ、体調フィルターに含む、record-buttonsを2段化） |
 
 ---
 
