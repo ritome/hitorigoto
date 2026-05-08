@@ -2,7 +2,7 @@
    役割：オフラインでも起動できるようにキャッシュ。
    バージョンを上げると、次回アクセス時に新版に自動更新される。 */
 
-const CACHE_VERSION = 'hitorigoto-v6';
+const CACHE_VERSION = 'hitorigoto-v7';
 const CACHE_FILES = [
   './',
   './index.html',

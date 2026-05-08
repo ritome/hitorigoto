@@ -348,24 +348,24 @@
 
   /* ============ ヒトリゴト（メモ） ============ */
   .memo-tags {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-bottom: 10px;
   }
   .memo-tag {
-    flex-shrink: 0;
     border: 1.5px solid var(--line-strong);
     background: var(--card);
     border-radius: 18px;
-    padding: 7px 12px 7px 11px;
+    padding: 8px 12px;
     cursor: pointer;
     font-family: inherit;
     font-size: 13px;
     color: var(--ink-soft);
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 6px;
     transition: all 0.15s;
   }
   .memo-tag.active {
